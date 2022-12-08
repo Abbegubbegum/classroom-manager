@@ -1,11 +1,9 @@
 <script setup lang="ts">
+import router from "@/router";
 import { ref } from "vue";
 
 const roomInput = ref("");
-
-const currentRoomCode = ref("");
-
-const owner = ref(false);
+const nameInput = ref("");
 
 async function createRoom() {
   const res = await fetch("http://localhost:8080/rooms/create");
@@ -14,20 +12,19 @@ async function createRoom() {
 
   localStorage.setItem("auth_token", data.token);
 
-  currentRoomCode.value = data.room.code;
-
-  owner.value = true;
+  router.push(`/${data.room.code}/teacher`);
 
   console.log(data);
 }
 
 async function joinRoom() {
-  if (roomInput.value.length != 4) {
+  if (roomInput.value.length !== 4 && nameInput.value.length < 2) {
     return;
   }
 
   const params = new URLSearchParams();
   params.set("code", roomInput.value);
+  params.set("name", nameInput.value);
 
   const headers = new Headers();
   const token = localStorage.getItem("auth_token");
@@ -47,14 +44,13 @@ async function joinRoom() {
       localStorage.setItem("auth_token", data.token);
     }
 
-    currentRoomCode.value = data.room.code;
-
-    owner.value = data.room.owner;
+    router.push(`/${data.room.code}/student`);
   } else {
     console.warn(await res.text());
   }
 }
 
+/*
 async function exitRoom() {
   if (currentRoomCode.value.length != 4) {
     return;
@@ -80,6 +76,7 @@ async function exitRoom() {
     owner.value = false;
   }
 }
+*/
 </script>
 
 <template>
@@ -92,12 +89,22 @@ async function exitRoom() {
       >
         CREATE ROOM
       </button>
-      <input
-        type="text"
-        name="room-id"
-        v-model="roomInput"
-        class="text-black"
-      />
+      <span>
+        <input
+          type="text"
+          name="room-id"
+          v-model="roomInput"
+          placeholder="CODE"
+          class="text-black"
+        />
+        <input
+          type="text"
+          name="name-input"
+          v-model="nameInput"
+          placeholder="NAME"
+          class="text-black"
+        />
+      </span>
       <button
         type="button"
         class="bg-gray-600 p-2 border border-white ml-4"
@@ -105,13 +112,13 @@ async function exitRoom() {
       >
         JOIN ROOM
       </button>
-      <button
+      <!-- <button
         type="button"
         class="bg-gray-600 p-2 border border-white block"
         @click="exitRoom"
       >
         EXIT ROOM
-      </button>
+      </button> -->
     </div>
   </div>
 </template>

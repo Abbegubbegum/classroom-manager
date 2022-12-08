@@ -11,7 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret";
 type Room = {
 	ownerID: string;
 	code: string;
-	memberIDs: Member[];
+	members: Member[];
 };
 
 type Member = {
@@ -24,6 +24,57 @@ let rooms: Room[] = [];
 app.use(cors());
 app.use(express.json());
 app.use(express.static(resolve("../frontend/dist")));
+
+app.get("/rooms/status", (req, res) => {
+	const roomCode = req.query.code;
+	const authHeader = req.get("Authorization");
+
+	if (typeof roomCode !== "string") {
+		return res
+			.status(400)
+			.send("Bad Request, invalid/missing room code search parameter");
+	}
+
+	const room = rooms.find((room) => room.code === roomCode);
+
+	if (!room) {
+		return res.status(404).send("Room not found");
+	}
+
+	let token: string | undefined;
+	let id: string | undefined;
+	let decodedToken: jwt.JwtPayload | undefined;
+
+	if (authHeader) {
+		token = parseAuthHeader(authHeader);
+
+		if (token) {
+			decodedToken = decodeToken(token);
+		}
+	}
+
+	if (!decodedToken) {
+		return res.sendStatus(403);
+	}
+
+	id = decodedToken.id;
+
+	if (room.ownerID === id) {
+		return res.status(200).json({
+			level: "teacher",
+		});
+	}
+
+	const member = room.members.find((member) => member.id === id);
+
+	if (member) {
+		return res.status(200).json({
+			level: "student",
+		});
+	}
+
+	res.sendStatus(403);
+});
 
 app.get("/rooms/create", (req, res) => {
 	const authHeader = req.get("Authorization");
@@ -42,10 +93,11 @@ app.get("/rooms/create", (req, res) => {
 
 	if (decodedToken) {
 		id = decodedToken.id;
-	} else if (!decodedToken) {
-		const newToken = createUserToken("1d");
-		token = newToken.token;
-		id = newToken.id;
+	} else {
+		const { token: newToken, data } = createUser("", "1d");
+
+		id = data.id;
+		token = newToken;
 	}
 
 	if (!id || !token) {
@@ -62,13 +114,24 @@ app.get("/rooms/create", (req, res) => {
 
 app.get("/rooms/join", (req, res) => {
 	const roomCode = req.query.code;
+	const name = req.query.name;
 
 	const authHeader = req.get("Authorization");
 
 	if (typeof roomCode !== "string") {
 		return res
 			.status(400)
-			.send("Bad request, Missing room code search parameter");
+			.send("Bad request, Invalid/Missing room code search parameter");
+	}
+
+	if (typeof name !== "string") {
+		return res
+			.status(400)
+			.send("Bad request, Invalid/Missing name search parameter");
+	}
+
+	if (nameIsInvalid(name)) {
+		return res.status(400).send("Name is not valid");
 	}
 
 	const room = rooms.find((room) => room.code === roomCode);
@@ -78,8 +141,8 @@ app.get("/rooms/join", (req, res) => {
 	}
 
 	let token: string | undefined;
-
 	let decodedToken: jwt.JwtPayload | undefined;
+	let member: Member | undefined;
 
 	if (authHeader) {
 		token = parseAuthHeader(authHeader);
@@ -89,21 +152,41 @@ app.get("/rooms/join", (req, res) => {
 		}
 	}
 
-	if (!decodedToken) {
-		token = createUserToken("1h");
+	if (decodedToken) {
+		member = getMemberFromId(decodedToken.id, room);
 	}
 
-	if (!token) {
+	if (!member) {
+		const { token: newToken, data } = createUser(name, "3h");
+
+		token = newToken;
+		member = data;
+	}
+
+	if (!token || !member) {
 		return res.sendStatus(500);
 	}
 
-	return res.status(200).json({
-		token,
-		room: {
-			code: room.code,
-			owner: room.ownerID === token,
-		},
-	});
+	if (room.ownerID === member.id) {
+		return res.status(200).json({
+			token,
+			room: {
+				code: room.code,
+				owner: false,
+				members: room.members,
+			},
+		});
+	} else {
+		addMemberToRoom(member, room);
+
+		return res.status(200).json({
+			token,
+			room: {
+				code: room.code,
+				owner: false,
+			},
+		});
+	}
 });
 
 app.get("/rooms/exit", (req, res) => {
@@ -120,12 +203,17 @@ app.get("/rooms/exit", (req, res) => {
 	const room = rooms.find((room) => room.code === roomCode);
 
 	let token: string | undefined;
+	let decodedToken: jwt.JwtPayload | undefined;
 
 	if (authHeader) {
 		token = parseAuthHeader(authHeader);
+
+		if (token) {
+			decodedToken = decodeToken(token);
+		}
 	}
 
-	if (room?.ownerID == (token ?? "")) {
+	if (room?.ownerID === ((decodedToken?.id as string) ?? "")) {
 		rooms.splice(rooms.indexOf(room), 1);
 	}
 
@@ -191,28 +279,29 @@ function generateRoomCode() {
 	return roomCode;
 }
 
-function createUserToken(expiresIn: string) {
-	const uid = generateUID();
+function createUser(name: string, tokenExpiresIn: string) {
+	const id = generateUID();
+
+	const token = createToken(id, tokenExpiresIn);
 
 	return {
-		token: jwt.sign(
-			{
-				id: uid,
-			},
-			JWT_SECRET,
-			{
-				expiresIn,
-			}
-		),
-		id: uid,
+		token,
+		data: {
+			id,
+			name,
+		} as Member,
 	};
+}
+
+function createToken(id: string, expiresIn: string) {
+	return jwt.sign({ id }, JWT_SECRET, { expiresIn });
 }
 
 function createRoom(ownerID: string) {
 	const room: Room = {
 		ownerID: ownerID,
 		code: generateRoomCode(),
-		memberIDs: [],
+		members: [],
 	};
 	rooms.push(room);
 	return room;
@@ -253,4 +342,16 @@ function decodeToken(token: string): jwt.JwtPayload | undefined {
 		console.log(res);
 		return undefined;
 	}
+}
+
+function nameIsInvalid(name: string) {
+	return name.length < 1;
+}
+
+function getMemberFromId(id: string, room: Room) {
+	return room.members.find((member) => member.id === id);
+}
+
+function addMemberToRoom(member: Member, room: Room) {
+	room.members.push(member);
 }
