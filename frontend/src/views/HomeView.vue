@@ -13,8 +13,6 @@ async function createRoom() {
   localStorage.setItem("auth_token", data.token);
 
   router.push(`/${data.room.code}/teacher`);
-
-  console.log(data);
 }
 
 async function joinRoom() {
@@ -44,7 +42,11 @@ async function joinRoom() {
       localStorage.setItem("auth_token", data.token);
     }
 
-    router.push(`/${data.room.code}/student`);
+    if (data.room.owner) {
+      router.push(`/${data.room.code}/teacher`);
+    } else {
+      router.push(`/${data.room.code}/student`);
+    }
   } else {
     console.warn(await res.text());
   }

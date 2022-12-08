@@ -2,16 +2,27 @@ import express from "express";
 import { resolve } from "path";
 import cors from "cors";
 import jwt from "jsonwebtoken";
+import ms from "ms";
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+	cors: {
+		origin: "http://localhost:5173",
+	},
+});
 const port = process.env.PORT || 8080;
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret";
 
 type Room = {
 	ownerID: string;
+	expiresAt: number;
 	code: string;
 	members: Member[];
+	queue: number[];
 };
 
 type Member = {
@@ -20,10 +31,44 @@ type Member = {
 };
 
 let rooms: Room[] = [];
+let socketids = new Map<string, string>();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static(resolve("../frontend/dist")));
+
+io.use((socket, next) => {
+	const token = socket.handshake.auth.token as string;
+
+	const decodedToken = decodeToken(token);
+
+	if (!decodedToken) {
+		const err = new Error("Not Authorized");
+		next(err);
+		return;
+	}
+
+	socketids.set(decodedToken.id as string, socket.id);
+	next();
+});
+
+io.on("connection", (socket) => {
+	console.log("Connected " + socket.id);
+
+	socket.on("ROOM_INFO", (code: string, cb: (res: Room | any) => void) => {
+		const token = socket.handshake.auth.token as string;
+
+		const room = rooms.find((room) => room.code === code);
+
+		const decodedToken = decodeToken(token);
+
+		if (room?.ownerID == ((decodedToken?.id as string) ?? "")) {
+			cb(room);
+		} else {
+			cb("Unauthorized");
+		}
+	});
+});
 
 app.get("/rooms/status", (req, res) => {
 	const roomCode = req.query.code;
@@ -94,7 +139,7 @@ app.get("/rooms/create", (req, res) => {
 	if (decodedToken) {
 		id = decodedToken.id;
 	} else {
-		const { token: newToken, data } = createUser("", "1d");
+		const { token: newToken, data } = createUser("", "5h");
 
 		id = data.id;
 		token = newToken;
@@ -104,7 +149,7 @@ app.get("/rooms/create", (req, res) => {
 		return res.sendStatus(500);
 	}
 
-	const room = createRoom(id);
+	const room = createRoom(id, "5h");
 
 	return res.status(201).json({
 		token,
@@ -116,7 +161,7 @@ app.get("/rooms/join", (req, res) => {
 	const roomCode = req.query.code;
 	const name = req.query.name;
 
-	const authHeader = req.get("Authorization");
+	let token = parseAuthHeader(req.get("Authorization"));
 
 	if (typeof roomCode !== "string") {
 		return res
@@ -140,17 +185,9 @@ app.get("/rooms/join", (req, res) => {
 		return res.status(404).send("Room not found");
 	}
 
-	let token: string | undefined;
-	let decodedToken: jwt.JwtPayload | undefined;
+	const decodedToken = decodeToken(token);
+
 	let member: Member | undefined;
-
-	if (authHeader) {
-		token = parseAuthHeader(authHeader);
-
-		if (token) {
-			decodedToken = decodeToken(token);
-		}
-	}
 
 	if (decodedToken) {
 		member = getMemberFromId(decodedToken.id, room);
@@ -172,7 +209,7 @@ app.get("/rooms/join", (req, res) => {
 			token,
 			room: {
 				code: room.code,
-				owner: false,
+				owner: true,
 				members: room.members,
 			},
 		});
@@ -192,7 +229,7 @@ app.get("/rooms/join", (req, res) => {
 app.get("/rooms/exit", (req, res) => {
 	const roomCode = req.query.code;
 
-	const authHeader = req.get("Authorization");
+	const token: string | undefined = parseAuthHeader(req.get("Authorization"));
 
 	if (typeof roomCode !== "string") {
 		return res
@@ -202,16 +239,7 @@ app.get("/rooms/exit", (req, res) => {
 
 	const room = rooms.find((room) => room.code === roomCode);
 
-	let token: string | undefined;
-	let decodedToken: jwt.JwtPayload | undefined;
-
-	if (authHeader) {
-		token = parseAuthHeader(authHeader);
-
-		if (token) {
-			decodedToken = decodeToken(token);
-		}
-	}
+	const decodedToken = decodeToken(token);
 
 	if (room?.ownerID === ((decodedToken?.id as string) ?? "")) {
 		rooms.splice(rooms.indexOf(room), 1);
@@ -220,7 +248,7 @@ app.get("/rooms/exit", (req, res) => {
 	return res.sendStatus(200);
 });
 
-app.listen(port, () => {
+httpServer.listen(port, () => {
 	console.log(`Listening on http://localhost:${port}`);
 });
 
@@ -297,17 +325,21 @@ function createToken(id: string, expiresIn: string) {
 	return jwt.sign({ id }, JWT_SECRET, { expiresIn });
 }
 
-function createRoom(ownerID: string) {
+function createRoom(ownerID: string, expiresIn: string) {
 	const room: Room = {
 		ownerID: ownerID,
 		code: generateRoomCode(),
 		members: [],
+		queue: [],
+		expiresAt: Date.now() + ms(expiresIn),
 	};
 	rooms.push(room);
 	return room;
 }
 
-function parseAuthHeader(header: string) {
+function parseAuthHeader(header: string | undefined) {
+	if (!header) return undefined;
+
 	// Split the header on the space character to get the parts
 	// The format of the header is "Bearer <token>"
 	const parts = header.split(" ");
@@ -326,13 +358,15 @@ function parseAuthHeader(header: string) {
 	return parts[1];
 }
 
-function decodeToken(token: string): jwt.JwtPayload | undefined {
+function decodeToken(token: string | undefined): jwt.JwtPayload | undefined {
 	let res: jwt.JwtPayload | string;
+
+	if (!token) return undefined;
 
 	try {
 		res = jwt.verify(token, JWT_SECRET);
 	} catch (err) {
-		console.log(err);
+		// console.log(err);
 		return undefined;
 	}
 
@@ -352,6 +386,16 @@ function getMemberFromId(id: string, room: Room) {
 	return room.members.find((member) => member.id === id);
 }
 
+function getSocketIdFromId(id: string) {
+	return socketids.get(id);
+}
+
 function addMemberToRoom(member: Member, room: Room) {
 	room.members.push(member);
+
+	const socketId = getSocketIdFromId(room.ownerID);
+
+	if (socketId) {
+		io.to(socketId).emit("ROOM_INFO", room);
+	}
 }
