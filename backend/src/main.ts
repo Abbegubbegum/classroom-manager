@@ -5,12 +5,13 @@ import jwt from "jsonwebtoken";
 import ms from "ms";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { stringify } from "querystring";
 
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
 	cors: {
-		origin: "http://localhost:5173",
+		origin: "http://127.0.0.1:5173",
 	},
 });
 const port = process.env.PORT || 8080;
@@ -22,7 +23,7 @@ type Room = {
 	expiresAt: number;
 	code: string;
 	members: Member[];
-	queue: number[];
+	queue: string[];
 };
 
 type Member = {
@@ -53,7 +54,7 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
-	console.log("Connected " + socket.id);
+	// console.log("Connected " + socket.id);
 
 	socket.on("ROOM_INFO", (code: string, cb: (res: Room | any) => void) => {
 		const token = socket.handshake.auth.token as string;
@@ -62,12 +63,43 @@ io.on("connection", (socket) => {
 
 		const decodedToken = decodeToken(token);
 
+		// console.log(decodedToken);
+		// console.log(room);
+
 		if (room?.ownerID == ((decodedToken?.id as string) ?? "")) {
 			cb(room);
 		} else {
-			cb("Unauthorized");
+			cb(undefined);
 		}
 	});
+
+	socket.on(
+		"MEMBER_INFO",
+		(code: string, cb: (res: any | undefined) => void) => {
+			const token = socket.handshake.auth.token as string;
+
+			const decodedToken = decodeToken(token);
+
+			const room = rooms.find((room) => room.code === code);
+
+			if (!decodedToken || !room) {
+				cb(undefined);
+				return;
+			}
+
+			const member = getMemberFromId(decodedToken.id as string, room);
+
+			if (!member) {
+				cb(undefined);
+				return;
+			}
+
+			cb({
+				name: member.name,
+				inQueue: false,
+			});
+		}
+	);
 });
 
 app.get("/rooms/status", (req, res) => {
@@ -122,7 +154,7 @@ app.get("/rooms/status", (req, res) => {
 });
 
 app.get("/rooms/create", (req, res) => {
-	const authHeader = req.get("Authorization");
+	const authHeader = req.get("authorization");
 
 	let token: string | undefined;
 	let id: string | undefined;
@@ -149,7 +181,15 @@ app.get("/rooms/create", (req, res) => {
 		return res.sendStatus(500);
 	}
 
+	const oldRoomIndex = rooms.findIndex((room) => room.ownerID === id);
+
+	if (oldRoomIndex >= 0) {
+		rooms.splice(oldRoomIndex, 1);
+	}
+
 	const room = createRoom(id, "5h");
+
+	console.log(rooms);
 
 	return res.status(201).json({
 		token,
@@ -243,6 +283,27 @@ app.get("/rooms/exit", (req, res) => {
 
 	if (room?.ownerID === ((decodedToken?.id as string) ?? "")) {
 		rooms.splice(rooms.indexOf(room), 1);
+		return res.sendStatus(200);
+	}
+
+	if (decodedToken && room) {
+		const index = room.members.findIndex(
+			(member) => member.id === (decodedToken.id as string)
+		);
+
+		if (index >= 0) {
+			room.members.splice(index, 1);
+		}
+
+		const queueindex = room.queue.findIndex(
+			(id) => id === (decodedToken.id as string)
+		);
+
+		if (queueindex >= 0) {
+			room.queue.splice(queueindex, 1);
+		}
+
+		emitRoomInfoToRoomOwner(room);
 	}
 
 	return res.sendStatus(200);
@@ -393,6 +454,10 @@ function getSocketIdFromId(id: string) {
 function addMemberToRoom(member: Member, room: Room) {
 	room.members.push(member);
 
+	emitRoomInfoToRoomOwner(room);
+}
+
+function emitRoomInfoToRoomOwner(room: Room) {
 	const socketId = getSocketIdFromId(room.ownerID);
 
 	if (socketId) {

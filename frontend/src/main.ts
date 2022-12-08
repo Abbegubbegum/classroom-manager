@@ -22,6 +22,7 @@ const store = createStore({
   state() {
     return {
       room: {} as Room,
+      member: {} as any,
     };
   },
 });
@@ -65,5 +66,18 @@ export function getRoomInfo(roomCode: string) {
     }
 
     store.state.room = res;
+  });
+}
+
+export function getMemberInfo(roomCode: string) {
+  if (!socket.connected) connectWebSocket();
+
+  socket.emit("MEMBER_INFO", roomCode, (res: any) => {
+    if (!res) {
+      router.push("/");
+      return;
+    }
+
+    store.state.member = res;
   });
 }

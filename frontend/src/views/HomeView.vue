@@ -6,7 +6,16 @@ const roomInput = ref("");
 const nameInput = ref("");
 
 async function createRoom() {
-  const res = await fetch("http://localhost:8080/rooms/create");
+  const headers = new Headers();
+  const token = localStorage.getItem("auth_token");
+
+  if (token) {
+    headers.set("Authorization", "Bearer " + token);
+  }
+
+  const res = await fetch("http://localhost:8080/rooms/create", {
+    headers,
+  });
 
   const data = await res.json();
 
@@ -53,31 +62,7 @@ async function joinRoom() {
 }
 
 /*
-async function exitRoom() {
-  if (currentRoomCode.value.length != 4) {
-    return;
-  }
 
-  const params = new URLSearchParams();
-  params.set("code", currentRoomCode.value);
-
-  const headers = new Headers();
-  const token = localStorage.getItem("auth_token");
-
-  if (token) {
-    headers.set("Authorization", "Bearer " + token);
-  }
-
-  const res = await fetch("http://localhost:8080/rooms/exit/?" + params, {
-    headers,
-  });
-
-  if (res.ok) {
-    currentRoomCode.value = "";
-    localStorage.removeItem("auth_token");
-    owner.value = false;
-  }
-}
 */
 </script>
 
