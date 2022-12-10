@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { connectWebSocket, getMemberInfo, getRoomInfo } from "@/main";
+import {
+  connectWebSocket,
+  getMemberInfo,
+  getRoomInfo,
+  joinQueue,
+} from "@/main";
 import router from "@/router";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
@@ -35,9 +40,17 @@ async function exitRoom() {
   <div class="h-full bg-slate-900 text-white">
     <div class="p-6">
       <p class="text-3xl">Current Room: {{ $route.params.roomCode }}</p>
-      <p class="text-xl">{{ store.state.member.name }}</p>
+      <p class="text-xl">Name: {{ store.state.member.name }}</p>
+      <p class="text-xl">Queue Position: {{ store.state.queuePosition }}</p>
     </div>
     <div>
+      <button
+        type="button"
+        class="bg-slate-500 p-3 m-4 hover:bg-slate-200 hover:text-black"
+        @click="joinQueue($route.params.roomCode as string)"
+      >
+        JOIN QUEUE
+      </button>
       <button
         type="button"
         class="bg-slate-500 p-3 m-4 hover:bg-slate-200 hover:text-black"

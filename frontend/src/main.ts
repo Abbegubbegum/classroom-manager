@@ -23,6 +23,7 @@ const store = createStore({
     return {
       room: {} as Room,
       member: {} as any,
+      queuePosition: -1,
     };
   },
 });
@@ -52,6 +53,10 @@ socket.on("ROOM_INFO", (room: Room) => {
   store.state.room = room;
 });
 
+socket.on("QUEUE_UPDATE", (queuePosition: number) => {
+  store.state.queuePosition = queuePosition;
+});
+
 export function connectWebSocket() {
   if (!socket.connected) socket.connect();
 }
@@ -69,6 +74,12 @@ export function getRoomInfo(roomCode: string) {
   });
 }
 
+export function removeFromQueue(roomCode: string, memberID: string) {
+  if (!socket.connected) connectWebSocket();
+
+  socket.emit("OWNER_REMOVE_FROM_QUEUE", roomCode, memberID);
+}
+
 export function getMemberInfo(roomCode: string) {
   if (!socket.connected) connectWebSocket();
 
@@ -79,5 +90,17 @@ export function getMemberInfo(roomCode: string) {
     }
 
     store.state.member = res;
+  });
+}
+
+export function joinQueue(roomCode: string) {
+  if (!socket.connected) connectWebSocket();
+
+  socket.emit("JOIN_QUEUE", roomCode, (pos: number | undefined) => {
+    if (!pos) {
+      return;
+    }
+
+    store.state.queuePosition = pos;
   });
 }

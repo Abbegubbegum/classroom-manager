@@ -5,7 +5,6 @@ import jwt from "jsonwebtoken";
 import ms from "ms";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { stringify } from "querystring";
 
 const app = express();
 const httpServer = createServer(app);
@@ -73,6 +72,24 @@ io.on("connection", (socket) => {
 		}
 	});
 
+	socket.on("OWNER_REMOVE_FROM_QUEUE", (code: string, memberID: string) => {
+		const token = socket.handshake.auth.token as string;
+
+		const room = rooms.find((room) => room.code === code);
+
+		const decodedToken = decodeToken(token);
+
+		if (
+			!room ||
+			!decodedToken ||
+			room.ownerID !== (decodedToken.id as string)
+		) {
+			return;
+		}
+
+		removeMemberFromQueue(memberID, room);
+	});
+
 	socket.on(
 		"MEMBER_INFO",
 		(code: string, cb: (res: any | undefined) => void) => {
@@ -98,6 +115,40 @@ io.on("connection", (socket) => {
 				name: member.name,
 				inQueue: false,
 			});
+		}
+	);
+
+	socket.on(
+		"JOIN_QUEUE",
+		(code: string, cb: (place: number | undefined) => void) => {
+			const token = socket.handshake.auth.token as string;
+
+			const decodedToken = decodeToken(token);
+
+			const room = rooms.find((room) => room.code === code);
+
+			if (!decodedToken || !room) {
+				cb(undefined);
+				return;
+			}
+
+			const member = getMemberFromId(decodedToken.id as string, room);
+
+			if (!member) {
+				cb(undefined);
+				return;
+			}
+
+			const existingQueuespot = room.queue.find((id) => id === member.id);
+
+			if (existingQueuespot) {
+				cb(undefined);
+				return;
+			}
+
+			const newLength = addMemberToQueue(member, room);
+
+			cb(newLength);
 		}
 	);
 });
@@ -455,6 +506,36 @@ function addMemberToRoom(member: Member, room: Room) {
 	room.members.push(member);
 
 	emitRoomInfoToRoomOwner(room);
+}
+
+function addMemberToQueue(member: Member, room: Room): number {
+	const newLength = room.queue.push(member.id);
+
+	emitRoomInfoToRoomOwner(room);
+
+	return newLength;
+}
+
+function removeMemberFromQueue(memberID: string, room: Room) {
+	const spliceIndex = room.queue.indexOf(memberID);
+
+	room.queue.splice(spliceIndex, 1);
+
+	emitRoomInfoToRoomOwner(room);
+
+	emitQueueUpdateToMember(-1, memberID);
+
+	for (let i = spliceIndex; i < room.queue.length; i++) {
+		emitQueueUpdateToMember(i, room.queue[i]);
+	}
+}
+
+function emitQueueUpdateToMember(pos: number, memberID: string) {
+	const socketId = getSocketIdFromId(memberID);
+
+	if (socketId) {
+		io.to(socketId).emit("QUEUE_UPDATE", pos);
+	}
 }
 
 function emitRoomInfoToRoomOwner(room: Room) {

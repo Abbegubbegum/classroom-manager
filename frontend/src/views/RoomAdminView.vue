@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { connectWebSocket, getRoomInfo } from "@/main";
+import { connectWebSocket, getRoomInfo, removeFromQueue } from "@/main";
 import router from "@/router";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
@@ -29,6 +29,10 @@ async function exitRoom() {
     router.push("/");
   }
 }
+
+function getMemberFromStateWithId(memberID: string) {
+  return store.state.room.members.find((member: any) => member.id === memberID);
+}
 </script>
 
 <template>
@@ -36,10 +40,30 @@ async function exitRoom() {
     <div class="p-6">
       <p class="text-3xl">Current Room: {{ $route.params.roomCode }}</p>
       <p class="text-xl mt-3">You Are the Owner!</p>
-      <p class="text-xl font-bold">Members:</p>
-      <ul>
-        <li v-for="member in store.state.room.members">{{ member.name }}</li>
-      </ul>
+      <div class="flex">
+        <div>
+          <p class="text-xl font-bold">Members:</p>
+          <ul>
+            <li v-for="member in store.state.room.members">
+              {{ member.name }}
+            </li>
+          </ul>
+        </div>
+        <div class="mx-20">
+          <p class="text-xl font-bold">Queue:</p>
+          <ul>
+            <li
+              v-for="memberID in store.state.room.queue"
+              class="hover:text-red-600 hover:line-through cursor-pointer"
+              @click="
+                removeFromQueue($route.params.roomCode as string, memberID)
+              "
+            >
+              {{ getMemberFromStateWithId(memberID).name }}
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
 
     <div>
