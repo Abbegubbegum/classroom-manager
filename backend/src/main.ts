@@ -40,6 +40,8 @@ app.use(express.static(resolve("../frontend/dist")));
 io.use((socket, next) => {
 	const token = socket.handshake.auth.token as string;
 
+	console.log(token);
+
 	const decodedToken = decodeToken(token);
 
 	if (!decodedToken) {

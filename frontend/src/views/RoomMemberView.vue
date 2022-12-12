@@ -52,7 +52,7 @@ async function exitRoom() {
     <div>
       <button
         type="button"
-        class="bg-green-500 p-3 m-4 hover:bg-slate-200 hover:text-black"
+        class="bg-green-500 p-3 m-4 hover:text-black"
         :class="{ exitColor: store.state.queuePosition !== -1 }"
         @click="toggleQueue($route.params.roomCode as string)"
       >

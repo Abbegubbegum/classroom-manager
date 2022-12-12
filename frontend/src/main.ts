@@ -22,7 +22,7 @@ const store = createStore({
   state() {
     return {
       room: {} as Room,
-      member: {} as any,
+      member: {} as Member,
       queuePosition: -1,
     };
   },
@@ -35,7 +35,11 @@ app.mount("#app");
 
 const socket = io("http://localhost:8080", {
   autoConnect: false,
-  auth: { token: localStorage.getItem("token") },
+  auth: () => {
+    return {
+      token: localStorage.getItem("auth_token"),
+    };
+  },
 });
 
 socket.on("connection", () => {
@@ -56,8 +60,9 @@ socket.on("QUEUE_UPDATE", (queuePosition: number) => {
 });
 
 export function setToken(token: string) {
-  if (!token) {
+  if (socket.connected) {
     socket.disconnect();
+    console.log("Disconnected from server");
   }
 
   localStorage.setItem("auth_token", token);
@@ -65,11 +70,12 @@ export function setToken(token: string) {
 }
 
 export function connectWebSocket() {
-  if (!socket.connected) socket.connect();
+  console.log("Connecting TOKEN: " + (socket.auth as any).token);
+  socket.connect();
 }
 
 export function getRoomInfo(roomCode: string) {
-  if (!socket.connected) connectWebSocket();
+  socket.connect();
 
   socket.emit("ROOM_INFO", roomCode, (res: any) => {
     if (!res) {
@@ -82,13 +88,13 @@ export function getRoomInfo(roomCode: string) {
 }
 
 export function removeFromQueue(roomCode: string, memberID: string) {
-  if (!socket.connected) connectWebSocket();
+  socket.connect();
 
   socket.emit("OWNER_REMOVE_FROM_QUEUE", roomCode, memberID);
 }
 
 export function getMemberInfo(roomCode: string) {
-  if (!socket.connected) connectWebSocket();
+  socket.connect();
 
   socket.emit("MEMBER_INFO", roomCode, (res: any) => {
     if (!res) {
@@ -102,7 +108,7 @@ export function getMemberInfo(roomCode: string) {
 }
 
 export function joinQueue(roomCode: string) {
-  if (!socket.connected) connectWebSocket();
+  socket.connect();
 
   socket.emit("JOIN_QUEUE", roomCode, (pos: number | undefined) => {
     if (!pos) {
@@ -114,7 +120,7 @@ export function joinQueue(roomCode: string) {
 }
 
 export function leaveQueue(roomCode: string) {
-  if (!socket.connected) connectWebSocket();
+  socket.connect();
 
   socket.emit("LEAVE_QUEUE", roomCode);
 
