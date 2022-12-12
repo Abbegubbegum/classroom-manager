@@ -1,6 +1,12 @@
 <script setup lang="ts">
-import { connectWebSocket, getRoomInfo, removeFromQueue } from "@/main";
+import {
+  connectWebSocket,
+  getRoomInfo,
+  removeFromQueue,
+  setToken,
+} from "@/main";
 import router from "@/router";
+import { Socket } from "engine.io-client";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 const route = useRoute();
@@ -25,7 +31,7 @@ async function exitRoom() {
   });
 
   if (res.ok) {
-    localStorage.removeItem("auth_token");
+    setToken("");
     router.push("/");
   }
 }

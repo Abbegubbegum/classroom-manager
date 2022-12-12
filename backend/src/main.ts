@@ -10,7 +10,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
 	cors: {
-		origin: "http://127.0.0.1:5173",
+		origin: "*",
 	},
 });
 const port = process.env.PORT || 8080;
@@ -62,7 +62,7 @@ io.on("connection", (socket) => {
 
 		const decodedToken = decodeToken(token);
 
-		// console.log(decodedToken);
+		// console.log(token);
 		// console.log(room);
 
 		if (room?.ownerID == ((decodedToken?.id as string) ?? "")) {
@@ -111,9 +111,11 @@ io.on("connection", (socket) => {
 				return;
 			}
 
+			const queuePos = room.queue.findIndex((id) => id === member.id);
+
 			cb({
 				name: member.name,
-				inQueue: false,
+				queuePosition: queuePos === -1 ? -1 : queuePos + 1,
 			});
 		}
 	);
@@ -151,6 +153,20 @@ io.on("connection", (socket) => {
 			cb(newLength);
 		}
 	);
+
+	socket.on("LEAVE_QUEUE", (code: string) => {
+		const token = socket.handshake.auth.token as string;
+
+		const decodedToken = decodeToken(token);
+
+		const room = rooms.find((room) => room.code === code);
+
+		if (!decodedToken || !room) {
+			return;
+		}
+
+		removeMemberFromQueue(decodedToken.id, room);
+	});
 });
 
 app.get("/rooms/status", (req, res) => {
@@ -219,6 +235,8 @@ app.get("/rooms/create", (req, res) => {
 		}
 	}
 
+	console.log(decodedToken?.id);
+
 	if (decodedToken) {
 		id = decodedToken.id;
 	} else {
@@ -231,6 +249,8 @@ app.get("/rooms/create", (req, res) => {
 	if (!id || !token) {
 		return res.sendStatus(500);
 	}
+
+	console.log(id);
 
 	const oldRoomIndex = rooms.findIndex((room) => room.ownerID === id);
 
@@ -530,11 +550,11 @@ function removeMemberFromQueue(memberID: string, room: Room) {
 	}
 }
 
-function emitQueueUpdateToMember(pos: number, memberID: string) {
+function emitQueueUpdateToMember(index: number, memberID: string) {
 	const socketId = getSocketIdFromId(memberID);
 
 	if (socketId) {
-		io.to(socketId).emit("QUEUE_UPDATE", pos);
+		io.to(socketId).emit("QUEUE_UPDATE", index === -1 ? -1 : index + 1);
 	}
 }
 

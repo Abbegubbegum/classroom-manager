@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import {
   connectWebSocket,
   getMemberInfo,
-  getRoomInfo,
   joinQueue,
+  leaveQueue,
+  setToken,
 } from "@/main";
 import router from "@/router";
 import { useRoute } from "vue-router";
@@ -13,6 +15,10 @@ const store = useStore();
 
 connectWebSocket();
 getMemberInfo(route.params.roomCode as string);
+
+const toggleQueue = computed(() =>
+  store.state.queuePosition === -1 ? joinQueue : leaveQueue
+);
 
 async function exitRoom() {
   const params = new URLSearchParams();
@@ -30,7 +36,7 @@ async function exitRoom() {
   });
 
   if (res.ok) {
-    localStorage.removeItem("auth_token");
+    setToken("");
     router.push("/");
   }
 }
@@ -46,10 +52,11 @@ async function exitRoom() {
     <div>
       <button
         type="button"
-        class="bg-slate-500 p-3 m-4 hover:bg-slate-200 hover:text-black"
-        @click="joinQueue($route.params.roomCode as string)"
+        class="bg-green-500 p-3 m-4 hover:bg-slate-200 hover:text-black"
+        :class="{ exitColor: store.state.queuePosition !== -1 }"
+        @click="toggleQueue($route.params.roomCode as string)"
       >
-        JOIN QUEUE
+        {{ store.state.queuePosition === -1 ? "JOIN QUEUE" : "LEAVE QUEUE" }}
       </button>
       <button
         type="button"
@@ -62,4 +69,8 @@ async function exitRoom() {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.exitColor {
+  background: red !important;
+}
+</style>

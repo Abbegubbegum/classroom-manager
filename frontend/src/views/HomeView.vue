@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { setToken } from "@/main";
 import router from "@/router";
 import { ref } from "vue";
 
@@ -19,7 +20,7 @@ async function createRoom() {
 
   const data = await res.json();
 
-  localStorage.setItem("auth_token", data.token);
+  setToken(data.token);
 
   router.push(`/${data.room.code}/teacher`);
 }
@@ -48,7 +49,7 @@ async function joinRoom() {
     const data = await res.json();
 
     if (token !== data.token) {
-      localStorage.setItem("auth_token", data.token);
+      setToken(data.token);
     }
 
     if (data.room.owner) {

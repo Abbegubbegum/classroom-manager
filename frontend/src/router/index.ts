@@ -1,7 +1,6 @@
 import {
   createRouter,
   createWebHistory,
-  type RouteLocationNormalized,
 } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 

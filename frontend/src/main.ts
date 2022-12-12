@@ -35,9 +35,7 @@ app.mount("#app");
 
 const socket = io("http://localhost:8080", {
   autoConnect: false,
-  auth: (cb) => {
-    cb({ token: localStorage.getItem("auth_token") });
-  },
+  auth: { token: localStorage.getItem("token") },
 });
 
 socket.on("connection", () => {
@@ -56,6 +54,15 @@ socket.on("ROOM_INFO", (room: Room) => {
 socket.on("QUEUE_UPDATE", (queuePosition: number) => {
   store.state.queuePosition = queuePosition;
 });
+
+export function setToken(token: string) {
+  if (!token) {
+    socket.disconnect();
+  }
+
+  localStorage.setItem("auth_token", token);
+  socket.auth = { token: token };
+}
 
 export function connectWebSocket() {
   if (!socket.connected) socket.connect();
@@ -89,7 +96,8 @@ export function getMemberInfo(roomCode: string) {
       return;
     }
 
-    store.state.member = res;
+    store.state.member.name = res.name;
+    store.state.queuePosition = res.queuePosition;
   });
 }
 
@@ -103,4 +111,12 @@ export function joinQueue(roomCode: string) {
 
     store.state.queuePosition = pos;
   });
+}
+
+export function leaveQueue(roomCode: string) {
+  if (!socket.connected) connectWebSocket();
+
+  socket.emit("LEAVE_QUEUE", roomCode);
+
+  store.state.queuePosition = -1;
 }
