@@ -74,6 +74,39 @@ io.on("connection", (socket) => {
 		}
 	});
 
+	socket.on("OWNER_REMOVE_MEMBER", (code: string, memberID: string) => {
+		const token = socket.handshake.auth.token as string;
+
+		const room = rooms.find((room) => room.code === code);
+
+		const decodedToken = decodeToken(token);
+
+		console.log(decodedToken);
+		console.log(room?.ownerID);
+
+		if (
+			!room ||
+			!decodedToken ||
+			room.ownerID !== (decodedToken.id as string)
+		) {
+			return;
+		}
+
+		const index = room.members.findIndex(
+			(member) => member.id === (memberID as string)
+		);
+
+		if (index >= 0) {
+			room.members.splice(index, 1);
+		}
+
+		removeMemberFromQueue(memberID, room);
+
+		emitRemovalToMember(memberID);
+
+		emitRoomInfoToRoomOwner(room);
+	});
+
 	socket.on("OWNER_REMOVE_FROM_QUEUE", (code: string, memberID: string) => {
 		const token = socket.handshake.auth.token as string;
 
@@ -311,32 +344,19 @@ app.get("/rooms/join", (req, res) => {
 
 		token = newToken;
 		member = data;
+
+		addMemberToRoom(member, room);
 	}
 
 	if (!token || !member) {
 		return res.sendStatus(500);
 	}
 
-	if (room.ownerID === member.id) {
-		return res.status(200).json({
-			token,
-			room: {
-				code: room.code,
-				owner: true,
-				members: room.members,
-			},
-		});
-	} else {
-		addMemberToRoom(member, room);
-
-		return res.status(200).json({
-			token,
-			room: {
-				code: room.code,
-				owner: false,
-			},
-		});
-	}
+	return res.status(200).json({
+		token,
+		owner: room.ownerID === member.id,
+		code: room.code,
+	});
 });
 
 app.get("/rooms/exit", (req, res) => {
@@ -368,15 +388,7 @@ app.get("/rooms/exit", (req, res) => {
 			room.members.splice(index, 1);
 		}
 
-		const queueindex = room.queue.findIndex(
-			(id) => id === (decodedToken.id as string)
-		);
-
-		if (queueindex >= 0) {
-			room.queue.splice(queueindex, 1);
-		}
-
-		emitRoomInfoToRoomOwner(room);
+		removeMemberFromQueue(decodedToken.id, room);
 	}
 
 	return res.sendStatus(200);
@@ -541,6 +553,8 @@ function addMemberToQueue(member: Member, room: Room): number {
 function removeMemberFromQueue(memberID: string, room: Room) {
 	const spliceIndex = room.queue.indexOf(memberID);
 
+	if (spliceIndex === -1) return;
+
 	room.queue.splice(spliceIndex, 1);
 
 	emitRoomInfoToRoomOwner(room);
@@ -557,6 +571,14 @@ function emitQueueUpdateToMember(index: number, memberID: string) {
 
 	if (socketId) {
 		io.to(socketId).emit("QUEUE_UPDATE", index === -1 ? -1 : index + 1);
+	}
+}
+
+function emitRemovalToMember(memberID: string) {
+	const socketId = getSocketIdFromId(memberID);
+
+	if (socketId) {
+		io.to(socketId).emit("REMOVED_BY_OWNER");
 	}
 }
 

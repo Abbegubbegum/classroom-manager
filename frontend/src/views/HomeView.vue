@@ -1,10 +1,22 @@
 <script setup lang="ts">
 import { setToken } from "@/main";
 import router from "@/router";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
-const roomInput = ref("");
+const box1 = ref("");
+const box2 = ref("");
+const box3 = ref("");
+const box4 = ref("");
+const roomInput = computed(
+  () =>
+    box1.value.toUpperCase() +
+    box2.value.toUpperCase() +
+    box3.value.toUpperCase() +
+    box4.value.toUpperCase()
+);
+
 const nameInput = ref("");
+const nameInputElement = ref(null);
 
 async function createRoom() {
   const headers = new Headers();
@@ -52,29 +64,19 @@ async function joinRoom() {
       setToken(data.token);
     }
 
-    if (data.room.owner) {
-      router.push(`/${data.room.code}/teacher`);
-    } else {
-      router.push(`/${data.room.code}/student`);
-    }
+    router.push(`/${data.code}/${data.owner ? "teacher" : "student"}`);
   } else {
     console.warn(await res.text());
   }
 }
 
-function moveFocusForward(event: any) {
-  // event.preventDefault();
-  // console.log("FORWARD", event);
-  // if (event.inputType !== "deleteContentBackward") {
-  //   event.target.nextElementSibling.focus();
-  // }
-}
-
 function codeInputBefore(event: any) {
-  // console.log("FORWARD", event);
   if (event.key.length === 1 && event.target.value.length === 1) {
     event.target.value = event.key;
-    event.target.nextElementSibling.focus();
+    (event.target.dataset.pos !== "last"
+      ? event.target.nextElementSibling
+      : nameInputElement.value
+    ).focus();
   }
   if (event.keyCode === 8 && event.target.value.length === 0) {
     event.target.previousElementSibling.focus();
@@ -82,77 +84,86 @@ function codeInputBefore(event: any) {
 }
 
 function codeInputAfter(event: any) {
-  // console.log("FORWARD", event);
-
+  console.dir();
   if (event.key.length === 1) {
-    event.target.nextElementSibling.focus();
+    (event.target.dataset.pos !== "last"
+      ? event.target.nextElementSibling
+      : nameInputElement.value
+    ).focus();
   }
 }
 </script>
 
 <template>
   <div
-    class="bg-slate-900 h-full w-full text-white flex flex-col justify-around place-content-center items-center"
+    class="bg-slate-900 h-full w-full text-white flex flex-col justify-between place-content-center items-center"
   >
     <div>
-      <h1 class="text-5xl font-extrabold text-center">Classroom Manager</h1>
+      <h1 class="text-5xl font-extrabold text-center my-10">
+        Classroom Manager
+      </h1>
     </div>
-    <div class="p-6 flex flex-col justify-around">
-      <!-- <input
-        type="text"
-        name="room-id"
-        v-model="roomInput"
-        placeholder="CODE"
-        class="w-48 p-3 px-5 my-2 border-2 border-[#ccc] rounded bg-transparent"
-      /> -->
-
+    <form
+      @submit.prevent="joinRoom"
+      class="p-10 flex flex-col justify-around items-center bg-black rounded-lg"
+    >
       <div class="flex justify-between items-center gap-3">
         <input
           class="code-box"
+          minlength="1"
           maxlength="1"
-          @input="moveFocusForward"
+          required
           @keydown="codeInputBefore"
           @keyup="codeInputAfter"
+          v-model="box1"
+          data-pos="first"
         />
         <input
           class="code-box"
+          minlength="1"
           maxlength="1"
+          required
           @keydown="codeInputBefore"
-          @input="moveFocusForward"
           @keyup="codeInputAfter"
+          v-model="box2"
         />
         <input
           class="code-box"
+          minlength="1"
           maxlength="1"
+          required
           @keydown="codeInputBefore"
-          @input="moveFocusForward"
           @keyup="codeInputAfter"
+          v-model="box3"
         />
         <input
           class="code-box"
+          minlength="1"
           maxlength="1"
+          required
           @keydown="codeInputBefore"
           @keyup="codeInputAfter"
+          v-model="box4"
+          data-pos="last"
         />
       </div>
       <input
         type="text"
-        name="name-input"
+        ref="nameInputElement"
         v-model="nameInput"
         placeholder="NAME"
-        class="w-48 p-3 px-5 my-2 border-2 border-[#ccc] rounded bg-transparent"
+        class="w-full p-3 px-5 my-2 mb-12 border-2 border-[#ccc] rounded bg-black text-xl font-semibold"
       />
       <button
-        type="button"
-        class="bg-gray-600 p-2 border border-white"
-        @click="joinRoom"
+        type="submit"
+        class="bg-gray-600 p-4 px-8 rounded text-2xl font-bold"
       >
         JOIN ROOM
       </button>
-    </div>
+    </form>
     <button
       type="button"
-      class="bg-gray-600 p-4 px-8 text-xl border border-white"
+      class="bg-gray-600 my-10 p-4 px-8 text-xl rounded-lg"
       @click="createRoom"
     >
       CREATE ROOM
@@ -162,10 +173,13 @@ function codeInputAfter(event: any) {
 
 <style scoped>
 .code-box {
-  width: 3rem;
+  color: black;
+  font-size: 2rem;
+  font-weight: bold;
+  width: 4rem;
   aspect-ratio: 1 / 1;
-  border: 1px solid white;
-  background: transparent;
+  /* border: 1px solid white; */
+  background: #bbb;
   text-align: center;
   border-radius: 4px;
   text-transform: uppercase;

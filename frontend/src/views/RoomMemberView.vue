@@ -47,7 +47,9 @@ async function exitRoom() {
     <div class="p-6">
       <p class="text-3xl">Current Room: {{ $route.params.roomCode }}</p>
       <p class="text-xl">Name: {{ store.state.member.name }}</p>
-      <p class="text-xl">Queue Position: {{ store.state.queuePosition }}</p>
+      <p class="text-xl" v-if="store.state.queuePosition !== -1">
+        Queue Position: {{ store.state.queuePosition }}
+      </p>
     </div>
     <div>
       <button
