@@ -40,7 +40,7 @@ app.use(express.static(resolve("../frontend/dist")));
 io.use((socket, next) => {
 	const token = socket.handshake.auth.token as string;
 
-	console.log(token);
+	// console.log(token);
 
 	const decodedToken = decodeToken(token);
 
@@ -237,7 +237,7 @@ app.get("/rooms/create", (req, res) => {
 		}
 	}
 
-	console.log(decodedToken?.id);
+	// console.log(decodedToken?.id);
 
 	if (decodedToken) {
 		id = decodedToken.id;
@@ -252,7 +252,7 @@ app.get("/rooms/create", (req, res) => {
 		return res.sendStatus(500);
 	}
 
-	console.log(id);
+	// console.log(id);
 
 	const oldRoomIndex = rooms.findIndex((room) => room.ownerID === id);
 
@@ -262,7 +262,7 @@ app.get("/rooms/create", (req, res) => {
 
 	const room = createRoom(id, "5h");
 
-	console.log(rooms);
+	// console.log(rooms);
 
 	return res.status(201).json({
 		token,
@@ -507,7 +507,7 @@ function decodeToken(token: string | undefined): jwt.JwtPayload | undefined {
 	if (typeof res !== "string") {
 		return res;
 	} else {
-		console.log(res);
+		// console.log(res);
 		return undefined;
 	}
 }

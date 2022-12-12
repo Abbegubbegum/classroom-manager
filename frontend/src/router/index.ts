@@ -34,7 +34,7 @@ router.beforeEach(async (to) => {
   if (to.meta.requiresAuth) {
     const token = localStorage.getItem("auth_token");
 
-    console.log("TOKEN: " + token);
+    // console.log("TOKEN: " + token);
 
     if (!token) {
       router.push("/");

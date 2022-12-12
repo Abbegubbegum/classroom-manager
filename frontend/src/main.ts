@@ -62,7 +62,7 @@ socket.on("QUEUE_UPDATE", (queuePosition: number) => {
 export function setToken(token: string) {
   if (socket.connected) {
     socket.disconnect();
-    console.log("Disconnected from server");
+    // console.log("Disconnected from server");
   }
 
   localStorage.setItem("auth_token", token);
@@ -70,7 +70,7 @@ export function setToken(token: string) {
 }
 
 export function connectWebSocket() {
-  console.log("Connecting TOKEN: " + (socket.auth as any).token);
+  // console.log("Connecting TOKEN: " + (socket.auth as any).token);
   socket.connect();
 }
 
