@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { setToken } from "@/main";
+import { API_URL, setToken } from "@/main";
 import router from "@/router";
 import { computed, ref } from "vue";
 
@@ -26,7 +26,7 @@ async function createRoom() {
     headers.set("Authorization", "Bearer " + token);
   }
 
-  const res = await fetch("http://localhost:8080/rooms/create", {
+  const res = await fetch(API_URL + "/rooms/create", {
     headers,
   });
 
@@ -53,7 +53,7 @@ async function joinRoom() {
     headers.set("Authorization", "Bearer " + token);
   }
 
-  const res = await fetch("http://localhost:8080/rooms/join/?" + params, {
+  const res = await fetch(API_URL + "/rooms/join/?" + params, {
     headers,
   });
 

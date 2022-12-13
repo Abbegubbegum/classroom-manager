@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import {
+  API_URL,
   connectWebSocket,
   getMemberInfo,
   joinQueue,
@@ -31,7 +32,7 @@ async function exitRoom() {
     headers.set("Authorization", "Bearer " + token);
   }
 
-  const res = await fetch("http://localhost:8080/rooms/exit/?" + params, {
+  const res = await fetch(API_URL + "/rooms/exit/?" + params, {
     headers,
   });
 
@@ -47,7 +48,10 @@ async function exitRoom() {
     <div class="p-6">
       <p class="text-3xl">Current Room: {{ $route.params.roomCode }}</p>
       <p class="text-xl">Name: {{ store.state.member.name }}</p>
-      <p class="text-xl" v-if="store.state.queuePosition !== -1">
+      <p
+        class="text-xl"
+        :class="{ disabled: store.state.queuePosition === -1 }"
+      >
         Queue Position: {{ store.state.queuePosition }}
       </p>
     </div>
@@ -74,5 +78,9 @@ async function exitRoom() {
 <style scoped>
 .exitColor {
   background: red !important;
+}
+
+.disabled {
+  opacity: 0;
 }
 </style>
