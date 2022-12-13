@@ -34,7 +34,7 @@ let socketids = new Map<string, string>();
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(resolve("../frontend/dist")));
+app.use(express.static(resolve("./views")));
 
 io.use((socket, next) => {
 	const token = socket.handshake.auth.token as string;
