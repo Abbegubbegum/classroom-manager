@@ -34,7 +34,7 @@ let socketids = new Map<string, string>();
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(resolve("./views")));
+app.use(express.static(resolve("../frontend/dist")));
 
 io.use((socket, next) => {
 	const token = socket.handshake.auth.token as string;
@@ -335,6 +335,14 @@ app.get("/rooms/join", (req, res) => {
 	let member: Member | undefined;
 
 	if (decodedToken) {
+		if (decodedToken.id === room.ownerID) {
+			return res.status(200).json({
+				token,
+				owner: true,
+				code: room.code,
+			});
+		}
+
 		member = getMemberFromId(decodedToken.id, room);
 	}
 
@@ -353,7 +361,7 @@ app.get("/rooms/join", (req, res) => {
 
 	return res.status(200).json({
 		token,
-		owner: room.ownerID === member.id,
+		owner: false,
 		code: room.code,
 	});
 });
