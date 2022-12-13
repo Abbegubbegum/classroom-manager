@@ -222,6 +222,13 @@ app.get("/rooms/join", (req, res) => {
     const decodedToken = decodeToken(token);
     let member;
     if (decodedToken) {
+        if (decodedToken.id === room.ownerID) {
+            return res.status(200).json({
+                token,
+                owner: true,
+                code: room.code,
+            });
+        }
         member = getMemberFromId(decodedToken.id, room);
     }
     if (!member) {
@@ -235,7 +242,7 @@ app.get("/rooms/join", (req, res) => {
     }
     return res.status(200).json({
         token,
-        owner: room.ownerID === member.id,
+        owner: false,
         code: room.code,
     });
 });
