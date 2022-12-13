@@ -16,7 +16,7 @@ type Member = {
   id: string;
 };
 
-export const API_URL = "";
+export const API_URL = "http://localhost:8080";
 
 const app = createApp(App);
 
