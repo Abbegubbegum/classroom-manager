@@ -339,6 +339,14 @@ app.get("/rooms/join", (req, res) => {
 	let member: Member | undefined;
 
 	if (decodedToken) {
+		if (decodedToken.id === room.ownerID) {
+			return res.status(200).json({
+				token,
+				owner: true,
+				code: room.code,
+			});
+		}
+
 		member = getMemberFromId(decodedToken.id, room);
 	}
 
@@ -357,7 +365,7 @@ app.get("/rooms/join", (req, res) => {
 
 	return res.status(200).json({
 		token,
-		owner: room.ownerID === member.id,
+		owner: false,
 		code: room.code,
 	});
 });

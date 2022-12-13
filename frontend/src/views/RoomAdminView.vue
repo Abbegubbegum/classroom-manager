@@ -76,7 +76,7 @@ function getMemberFromStateWithId(memberID: string) {
     </div>
     <button
       type="button"
-      class="sm:absolute sm:left-0 sm:top-0 bg-transparent border-2 border-black rounded p-3 px-6 m-4 text-lg hover:bg-gray-600 hover:text-white hover:border-white"
+      class="sm:absolute sm:left-0 sm:top-0 bg-transparent border-2 border-black rounded p-3 px-6 m-4 text-lg transition-colors hover:bg-gray-600 hover:text-white hover:border-white"
       @click="exitRoom"
     >
       EXIT ROOM

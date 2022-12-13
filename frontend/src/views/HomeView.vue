@@ -3,6 +3,8 @@ import { API_URL, setToken } from "@/main";
 import router from "@/router";
 import { computed, ref } from "vue";
 
+const roomError = ref(false);
+
 const box1 = ref("");
 const box2 = ref("");
 const box3 = ref("");
@@ -66,7 +68,14 @@ async function joinRoom() {
 
     router.push(`/${data.code}/${data.owner ? "teacher" : "student"}`);
   } else {
-    console.warn(await res.text());
+    const error = await res.text();
+
+    if (error === "Room not found") {
+      roomError.value = true;
+      setTimeout(() => {
+        roomError.value = false;
+      }, 700);
+    }
   }
 }
 
@@ -99,9 +108,9 @@ function codeInputAfter(event: any) {
     class="bg-slate-900 h-full w-full text-white flex flex-col justify-between place-content-center items-center"
   >
     <div>
-      <h1 class="text-5xl font-extrabold text-center my-10">
+      <!-- <h1 class="text-5xl font-extrabold text-center my-10">
         Classroom Manager
-      </h1>
+      </h1> -->
     </div>
     <form
       @submit.prevent="joinRoom"
@@ -110,6 +119,7 @@ function codeInputAfter(event: any) {
       <div class="flex justify-between items-center gap-3">
         <input
           class="code-box"
+          :class="{ error: roomError }"
           minlength="1"
           maxlength="1"
           required
@@ -120,6 +130,7 @@ function codeInputAfter(event: any) {
         />
         <input
           class="code-box"
+          :class="{ error: roomError }"
           minlength="1"
           maxlength="1"
           required
@@ -129,6 +140,7 @@ function codeInputAfter(event: any) {
         />
         <input
           class="code-box"
+          :class="{ error: roomError }"
           minlength="1"
           maxlength="1"
           required
@@ -138,6 +150,7 @@ function codeInputAfter(event: any) {
         />
         <input
           class="code-box"
+          :class="{ error: roomError }"
           minlength="1"
           maxlength="1"
           required
@@ -149,6 +162,8 @@ function codeInputAfter(event: any) {
       </div>
       <input
         type="text"
+        minlength="2"
+        maxlength="20"
         ref="nameInputElement"
         v-model="nameInput"
         placeholder="NAME"
@@ -156,14 +171,14 @@ function codeInputAfter(event: any) {
       />
       <button
         type="submit"
-        class="bg-gray-600 p-4 px-8 rounded text-2xl font-bold"
+        class="bg-gray-600 p-4 px-8 rounded text-2xl font-bold transition-colors hover:bg-slate-200 hover:text-black"
       >
         JOIN ROOM
       </button>
     </form>
     <button
       type="button"
-      class="bg-gray-600 my-10 p-4 px-8 text-xl rounded-lg"
+      class="bg-gray-600 my-10 p-4 px-8 text-xl rounded-lg transition-colors hover:bg-slate-200 hover:text-black"
       @click="createRoom"
     >
       CREATE ROOM
@@ -183,5 +198,28 @@ function codeInputAfter(event: any) {
   text-align: center;
   border-radius: 4px;
   text-transform: uppercase;
+}
+
+.error {
+  border: 2px solid red;
+  animation: shake 0.2s linear 3;
+}
+
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(10px);
+  }
+  50% {
+    transform: translateX(0);
+  }
+  75% {
+    transform: translateX(-10px);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
 </style>

@@ -86,11 +86,12 @@ export function connectWebSocket() {
     if (socket.connected) {
       resolve();
     }
-    setInterval(() => {
+    const interval = setInterval(() => {
       if (socket.connected) {
+        clearInterval(interval);
         resolve();
       }
-    }, 500);
+    }, 50);
   });
 }
 
