@@ -11,11 +11,7 @@ dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
-	cors: {
-		origin: "*",
-	},
-});
+const io = new Server(httpServer);
 
 const port = process.env.PORT || 8080;
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
@@ -38,7 +34,7 @@ let socketids = new Map<string, string>();
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(resolve("../frontend/dist")));
+app.use(express.static(resolve("./views")));
 
 io.use((socket, next) => {
 	const token = socket.handshake.auth.token as string;
