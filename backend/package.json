@@ -1,15 +1,14 @@
 {
-	"name": "backend-deploy",
-	"version": "0.1.0",
-	"description": "A website that helps teachers manage their students",
+	"name": "backend",
+	"version": "1.0.0",
+	"description": "",
 	"main": "./out/main.js",
 	"type": "module",
 	"scripts": {
-		"start": "node ./out/main.js",
 		"dev": "tsc --watch",
 		"serve": "nodemon ./out/main.js"
 	},
-	"author": "Albin Norbäck",
+	"author": "",
 	"license": "ISC",
 	"devDependencies": {
 		"@types/cors": "^2.8.13",
