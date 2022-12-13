@@ -3,8 +3,11 @@ import { resolve } from "path";
 import cors from "cors";
 import jwt from "jsonwebtoken";
 import ms from "ms";
+import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
+
+dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
@@ -13,9 +16,9 @@ const io = new Server(httpServer, {
 		origin: "*",
 	},
 });
-const port = process.env.PORT || 8080;
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret";
+const port = process.env.PORT || 8080;
+const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
 type Room = {
 	ownerID: string;
