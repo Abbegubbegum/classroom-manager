@@ -11,11 +11,7 @@ dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
-	cors: {
-		origin: "*",
-	},
-});
+const io = new Server(httpServer);
 
 const port = process.env.PORT || 8080;
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
