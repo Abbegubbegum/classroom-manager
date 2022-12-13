@@ -81,8 +81,8 @@ io.on("connection", (socket) => {
 
 		const decodedToken = decodeToken(token);
 
-		console.log(decodedToken);
-		console.log(room?.ownerID);
+		// console.log(decodedToken);
+		// console.log(room?.ownerID);
 
 		if (
 			!room ||

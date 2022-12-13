@@ -5,6 +5,7 @@ import {
   removeFromQueue,
   setToken,
   removeMember,
+  API_URL,
 } from "@/main";
 import router from "@/router";
 import { useRoute } from "vue-router";
@@ -26,7 +27,7 @@ async function exitRoom() {
     headers.set("Authorization", "Bearer " + token);
   }
 
-  const res = await fetch("http://localhost:8080/rooms/exit/?" + params, {
+  const res = await fetch(API_URL + "/rooms/exit/?" + params, {
     headers,
   });
 
@@ -47,25 +48,25 @@ function getMemberFromStateWithId(memberID: string) {
       <h1 class="mt-4 text-5xl font-bold">Room Code:</h1>
       <h1 class="text-5xl font-bold">{{ $route.params.roomCode }}</h1>
     </div>
-    <div class="flex">
-      <div>
-        <p class="text-xl font-bold">Members:</p>
+    <div class="p-6 grid grid-cols-2 w-1/2">
+      <div class="flex flex-col justify-start items-center">
+        <p class="text-3xl font-bold">Members:</p>
         <ul>
           <li
             v-for="member in store.state.room.members"
-            class="hover:text-red-600 hover:line-through cursor-pointer"
+            class="text-3xl hover:text-red-600 hover:line-through cursor-pointer"
             @click="removeMember(member.id, $route.params.roomCode as string)"
           >
             {{ member.name }}
           </li>
         </ul>
       </div>
-      <div class="mx-20">
-        <p class="text-xl font-bold">Queue:</p>
+      <div class="flex flex-col justify-start items-center">
+        <p class="text-3xl font-bold">Queue:</p>
         <ul>
           <li
             v-for="memberID in store.state.room.queue"
-            class="hover:text-red-600 hover:line-through cursor-pointer"
+            class="text-3xl hover:text-red-600 hover:line-through cursor-pointer"
             @click="removeFromQueue($route.params.roomCode as string, memberID)"
           >
             {{ getMemberFromStateWithId(memberID).name }}

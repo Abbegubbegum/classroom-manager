@@ -1,8 +1,9 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { API_URL } from "@/main";
+import { createRouter, createWebHashHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(),
   routes: [
     {
       path: "/",
@@ -47,7 +48,7 @@ router.beforeEach(async (to) => {
     const headers = new Headers();
     headers.set("Authorization", "Bearer " + token);
 
-    const res = await fetch("http://localhost:8080/rooms/status/?" + params, {
+    const res = await fetch(API_URL + "/rooms/status/?" + params, {
       headers,
     });
 
@@ -60,11 +61,11 @@ router.beforeEach(async (to) => {
 
     if (data.level === "teacher") {
       if (!to.meta.teacher) {
-        router.push(`${to.params.roomCode}/teacher`);
+        router.push(`/${to.params.roomCode}/teacher`);
       }
     } else if (data.level === "student") {
       if (!to.meta.student) {
-        router.push(`${to.params.roomCode}/student`);
+        router.push(`/${to.params.roomCode}/student`);
       }
     }
   }

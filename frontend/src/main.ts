@@ -16,6 +16,8 @@ type Member = {
   id: string;
 };
 
+export const API_URL = "";
+
 const app = createApp(App);
 
 const store = createStore({
@@ -33,7 +35,7 @@ app.use(store);
 
 app.mount("#app");
 
-const socket = io("http://localhost:8080", {
+const socket = io(API_URL, {
   autoConnect: false,
   auth: {
     token: localStorage.getItem("auth_token"),
@@ -41,7 +43,7 @@ const socket = io("http://localhost:8080", {
 });
 
 socket.on("connect", () => {
-  console.log("Connected to server");
+  // console.log("Connected to server");
 });
 
 socket.on("connect_error", () => {
@@ -50,7 +52,7 @@ socket.on("connect_error", () => {
 });
 
 socket.on("disconnect", () => {
-  console.log("Disconnected");
+  // console.log("Disconnected");
 });
 
 socket.on("ROOM_INFO", (room: Room) => {
@@ -75,13 +77,10 @@ export function setToken(token: string) {
 }
 
 export function connectWebSocket() {
-  console.log(socket);
-  console.log("Connecting TOKEN: " + (socket.auth as any).token);
   socket.connect();
 
-  console.log("Connecting");
-  console.log(socket.connected);
-  console.log(socket.disconnected);
+  // console.log("Connecting");
+  // console.log(socket.connected);
 
   return new Promise<void>((resolve, reject) => {
     if (socket.connected) {
@@ -97,8 +96,6 @@ export function connectWebSocket() {
 
 export async function getRoomInfo(roomCode: string) {
   await connectWebSocket();
-
-  console.log("Awaited");
 
   socket.emit("ROOM_INFO", roomCode, (res: any) => {
     if (!res) {
@@ -124,8 +121,6 @@ export async function removeFromQueue(roomCode: string, memberID: string) {
 
 export async function getMemberInfo(roomCode: string) {
   await connectWebSocket();
-
-  console.log("Awaited");
 
   socket.emit("MEMBER_INFO", roomCode, (res: any) => {
     if (!res) {
