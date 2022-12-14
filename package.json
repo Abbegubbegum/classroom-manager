@@ -7,7 +7,7 @@
 	"scripts": {
 		"start": "node main.js",
 		"dev": "tsc --watch",
-		"serve": "nodemon ./out/main.js"
+		"serve": "nodemon main.js"
 	},
 	"author": "Albin Norbäck",
 	"license": "ISC",
