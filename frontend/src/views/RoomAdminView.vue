@@ -8,13 +8,39 @@ import {
   API_URL,
 } from "@/main";
 import router from "@/router";
+import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
+import QRCode from "qrcode";
 const route = useRoute();
 const store = useStore();
 
 connectWebSocket();
 getRoomInfo(route.params.roomCode as string);
+
+onMounted(() => {
+  createQRCode();
+});
+
+function createQRCode() {
+  const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  QRCode.toCanvas(
+    canvas,
+    window.location.origin + "/#/?code=" + route.params.roomCode,
+    {
+      width: canvas.width,
+    },
+    (err) => {
+      if (err) console.error(err);
+
+      // canvas.width = canvas.width * 2;
+      // const ctx = canvas.getContext("2d");
+      // console.log(ctx);
+
+      // ctx?.scale(2, 2);
+    }
+  );
+}
 
 async function exitRoom() {
   const params = new URLSearchParams();
@@ -43,12 +69,13 @@ function getMemberFromStateWithId(memberID: string) {
 </script>
 
 <template>
-  <div class="w-full h-full flex flex-col justify-start items-center">
-    <div class="text-center">
+  <div class="w-full min-h-full flex flex-col justify-start items-center">
+    <div class="text-center flex flex-col items-center">
       <h1 class="mt-4 text-5xl font-bold">Room Code:</h1>
       <h1 class="text-5xl font-bold">{{ $route.params.roomCode }}</h1>
+      <canvas id="canvas" class="aspect-square" width="300"></canvas>
     </div>
-    <div class="p-6 grid grid-cols-2 w-1/2">
+    <div class="p-6 sm:grid sm:grid-cols-2 sm:w-1/2">
       <div class="flex flex-col justify-start items-center">
         <p class="text-3xl font-bold">Members:</p>
         <ul>
@@ -76,10 +103,10 @@ function getMemberFromStateWithId(memberID: string) {
     </div>
     <button
       type="button"
-      class="sm:absolute sm:left-0 sm:top-0 bg-transparent border-2 border-black rounded p-3 px-6 m-4 text-lg hover:bg-gray-600 hover:text-white hover:border-white"
+      class="sm:absolute sm:left-0 sm:top-0 bg-transparent border-2 border-black rounded p-3 px-6 m-4 text-lg transition-colors hover:bg-gray-600 hover:text-white hover:border-white"
       @click="exitRoom"
     >
-      EXIT ROOM
+      DELETE ROOM
     </button>
   </div>
 </template>

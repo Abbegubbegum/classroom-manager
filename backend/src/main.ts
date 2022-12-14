@@ -6,6 +6,7 @@ import ms from "ms";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { networkInterfaces } from "os";
 
 dotenv.config();
 
@@ -343,6 +344,14 @@ app.get("/rooms/join", (req, res) => {
 	let member: Member | undefined;
 
 	if (decodedToken) {
+		if (decodedToken.id === room.ownerID) {
+			return res.status(200).json({
+				token,
+				owner: true,
+				code: room.code,
+			});
+		}
+
 		member = getMemberFromId(decodedToken.id, room);
 	}
 
@@ -361,7 +370,7 @@ app.get("/rooms/join", (req, res) => {
 
 	return res.status(200).json({
 		token,
-		owner: room.ownerID === member.id,
+		owner: false,
 		code: room.code,
 	});
 });
@@ -402,7 +411,32 @@ app.get("/rooms/exit", (req, res) => {
 });
 
 httpServer.listen(port, () => {
-	console.log(`Listening on http://localhost:${port}`);
+	const nets = networkInterfaces();
+	const results = Object.create(null);
+
+	console.log("Listening on port " + port);
+	console.log("URLS:");
+
+	Object.keys(nets).forEach((name) => {
+		nets[name]?.forEach((net) => {
+			const familyV4Value = typeof net.family === "string" ? "IPv4" : 4;
+
+			if (net.family === familyV4Value && !net.internal) {
+				if (!results[name]) {
+					results[name] = [];
+				}
+				results[name].push(net.address);
+			}
+		});
+	});
+
+	Object.keys(results).forEach((name) => {
+		console.log();
+		console.log(`Network "${name}":`);
+		results[name].forEach((address: string) => {
+			console.log(`http://${address}:${port}`);
+		});
+	});
 });
 
 function generateUID() {
