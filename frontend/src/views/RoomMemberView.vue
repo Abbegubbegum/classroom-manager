@@ -4,6 +4,7 @@ import {
   API_URL,
   connectWebSocket,
   getMemberInfo,
+  getRoomConfig,
   joinQueue,
   leaveQueue,
   setToken,
@@ -14,8 +15,9 @@ import { useStore } from "vuex";
 const route = useRoute();
 const store = useStore();
 
-connectWebSocket();
-getMemberInfo(route.params.roomCode as string);
+await connectWebSocket();
+await getMemberInfo(route.params.roomCode as string);
+await getRoomConfig(route.params.roomCode as string);
 
 const toggleQueue = computed(() =>
   store.state.queuePosition === -1 ? joinQueue : leaveQueue
@@ -54,19 +56,26 @@ async function exitRoom() {
       <p class="text-4xl my-3 mb-10">{{ store.state.member.name }}</p>
       <p
         class="text-4xl font-semibold m-1 transition-opacity"
-        :class="{ disabled: store.state.queuePosition === -1 }"
+        :class="{
+          disabled:
+            store.state.queuePosition === -1 || !store.state.room.config.queue,
+        }"
       >
         In Queue!
       </p>
       <p
         class="text-3xl transition-opacity"
-        :class="{ disabled: store.state.queuePosition === -1 }"
+        :class="{
+          disabled:
+            store.state.queuePosition === -1 || !store.state.room.config.queue,
+        }"
       >
         Queue Position: {{ store.state.queuePosition }}
       </p>
     </div>
     <button
       type="button"
+      v-if="store.state.room.config.queue"
       class="bg-green-500 p-6 w-52 m-4 text-xl font-semibold rounded text-black transition-colors hover:text-white"
       :class="{ exitColor: store.state.queuePosition !== -1 }"
       @click="toggleQueue($route.params.roomCode as string)"

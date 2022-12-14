@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { defineProps, defineEmits } from "vue";
+import { useStore } from "vuex";
+import { useRoute } from "vue-router";
+import { setRoomConfig } from "@/main";
+import ToggleSetting from "./ToggleSetting.vue";
+const store = useStore();
+const route = useRoute();
 const props = defineProps<{ show: boolean }>();
+
 const emit = defineEmits<{
   (e: "close"): void;
 }>();
@@ -10,7 +17,28 @@ const emit = defineEmits<{
   <Transition name="modal">
     <div v-if="props.show" class="modal-mask">
       <div class="modal-wrapper">
-        <div class="modal-container"></div>
+        <div class="modal-container">
+          <ToggleSetting
+            label="Queue"
+            :value="store.state.room.config.queue"
+            @change="
+              (val) => {
+                store.state.room.config.queue = val;
+                setRoomConfig(route.params.roomCode as string);
+              }
+            "
+          ></ToggleSetting>
+          <ToggleSetting
+            label="Clock"
+            :value="store.state.room.config.clock"
+            @change="
+              (val) => {
+                store.state.room.config.clock = val;
+                setRoomConfig(route.params.roomCode as string);
+              }
+            "
+          ></ToggleSetting>
+        </div>
       </div>
     </div>
   </Transition>

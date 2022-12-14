@@ -2,9 +2,7 @@
 import {
   connectWebSocket,
   getRoomInfo,
-  removeFromQueue,
   setToken,
-  removeMember,
   API_URL,
 } from "@/main";
 import router from "@/router";
@@ -14,12 +12,12 @@ import { useStore } from "vuex";
 import QRCode from "qrcode";
 import TimeDisplay from "@/components/TimeDisplay.vue";
 import QueueList from "@/components/QueueList.vue";
-import SettingsDialog from "@/components/SettingsDialog.vue";
+import SettingsDialog from "@/components/Settings/SettingsDialog.vue";
 const route = useRoute();
 const store = useStore();
 
-connectWebSocket();
-getRoomInfo(route.params.roomCode as string);
+await connectWebSocket();
+await getRoomInfo(route.params.roomCode as string);
 
 const showSettings = ref(false);
 
@@ -81,17 +79,18 @@ async function exitRoom() {
 
     <TimeDisplay
       class="m-3 text-8xl font-semibold col-start-2 flex justify-center"
+      v-if="store.state.room.config.clock"
     ></TimeDisplay>
 
     <button
-      class="w-fit h-fit p-4 ml-auto text-5xl transition-transform gearButton z-20"
+      class="w-fit h-fit p-4 ml-auto text-5xl transition-transform gearButton z-20 col-start-3"
       @click="showSettings = !showSettings"
     >
       ⚙️
     </button>
 
     <div class="row-start-2 p-6 min-h-full">
-      <QueueList></QueueList>
+      <QueueList v-if="store.state.room.config.queue"></QueueList>
     </div>
 
     <div class="m-6 text-center flex flex-col items-center row-start-2">

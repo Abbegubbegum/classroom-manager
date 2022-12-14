@@ -9,6 +9,12 @@ export type Room = {
   code: string;
   members: Member[];
   queue: number[];
+  config: RoomConfig;
+};
+
+type RoomConfig = {
+  queue: boolean;
+  clock: boolean;
 };
 
 type Member = {
@@ -59,6 +65,10 @@ socket.on("ROOM_INFO", (room: Room) => {
   store.state.room = room;
 });
 
+socket.on("ROOM_CONFIG", (config: RoomConfig) => {
+  store.state.room.config = config;
+});
+
 socket.on("QUEUE_UPDATE", (queuePosition: number) => {
   store.state.queuePosition = queuePosition;
 });
@@ -98,13 +108,18 @@ export function connectWebSocket() {
 export async function getRoomInfo(roomCode: string) {
   await connectWebSocket();
 
-  socket.emit("ROOM_INFO", roomCode, (res: any) => {
-    if (!res) {
-      router.push("/");
-      return;
-    }
+  return new Promise<void>((resolve, reject) => {
+    socket.emit("ROOM_INFO", roomCode, (res: any) => {
+      if (!res) {
+        router.push("/");
+        reject();
+        return;
+      }
 
-    store.state.room = res;
+      store.state.room = res;
+
+      resolve();
+    });
   });
 }
 
@@ -123,14 +138,18 @@ export async function removeFromQueue(roomCode: string, memberID: string) {
 export async function getMemberInfo(roomCode: string) {
   await connectWebSocket();
 
-  socket.emit("MEMBER_INFO", roomCode, (res: any) => {
-    if (!res) {
-      router.push("/");
-      return;
-    }
+  return new Promise<void>((resolve, reject) => {
+    socket.emit("MEMBER_INFO", roomCode, (res: any) => {
+      if (!res) {
+        router.push("/");
+        reject();
+        return;
+      }
 
-    store.state.member.name = res.name;
-    store.state.queuePosition = res.queuePosition;
+      store.state.member.name = res.name;
+      store.state.queuePosition = res.queuePosition;
+      resolve();
+    });
   });
 }
 
@@ -153,4 +172,33 @@ export async function leaveQueue(roomCode: string) {
   socket.emit("LEAVE_QUEUE", roomCode);
 
   store.state.queuePosition = -1;
+}
+
+export async function setRoomConfig(roomCode: string) {
+  await connectWebSocket();
+
+  socket.emit("SET_ROOM_CONFIG", roomCode, store.state.room.config);
+}
+
+export async function getRoomConfig(roomCode: string) {
+  await connectWebSocket();
+
+  return new Promise<void>((resolve, reject) => {
+    socket.emit(
+      "GET_ROOM_CONFIG",
+      roomCode,
+      (config: RoomConfig | undefined) => {
+        if (!config) {
+          router.push("/");
+          reject();
+          return;
+        }
+
+        console.log(config);
+
+        store.state.room.config = config;
+        resolve();
+      }
+    );
+  });
 }
