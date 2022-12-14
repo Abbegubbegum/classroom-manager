@@ -191,7 +191,7 @@ function codeInputAfter(event: any) {
     </form>
     <button
       type="button"
-      class="bg-gray-600 my-10 p-4 px-8 text-xl rounded-lg transition-colors hover:bg-slate-200 hover:text-black"
+      class="bg-gray-600 mb-40 sm:mb-10 p-4 px-8 text-xl rounded-lg transition-colors hover:bg-slate-200 hover:text-black"
       @click="createRoom"
     >
       CREATE ROOM
