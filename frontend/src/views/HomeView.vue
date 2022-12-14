@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { useRoute } from "vue-router";
 import { API_URL, setToken } from "@/main";
 import router from "@/router";
 import { computed, ref } from "vue";
+
+const route = useRoute();
 
 const roomError = ref(false);
 
@@ -9,6 +12,7 @@ const box1 = ref("");
 const box2 = ref("");
 const box3 = ref("");
 const box4 = ref("");
+
 const roomInput = computed(
   () =>
     box1.value.toUpperCase() +
@@ -19,6 +23,14 @@ const roomInput = computed(
 
 const nameInput = ref("");
 const nameInputElement = ref(null);
+
+if (route.query.code) {
+  const code = route.query.code as string;
+  box1.value = code[0];
+  box2.value = code[1];
+  box3.value = code[2];
+  box4.value = code[3];
+}
 
 async function createRoom() {
   const headers = new Headers();
@@ -39,14 +51,14 @@ async function createRoom() {
   router.push(`/${data.room.code}/teacher`);
 }
 
-async function joinRoom() {
-  if (roomInput.value.length !== 4 && nameInput.value.length < 2) {
+async function joinRoom(code: string, name: string) {
+  if (code.length !== 4 && name.length < 2) {
     return;
   }
 
   const params = new URLSearchParams();
-  params.set("code", roomInput.value);
-  params.set("name", nameInput.value);
+  params.set("code", code);
+  params.set("name", name);
 
   const headers = new Headers();
   const token = localStorage.getItem("auth_token");
@@ -76,6 +88,8 @@ async function joinRoom() {
         roomError.value = false;
       }, 700);
     }
+
+    return false;
   }
 }
 
@@ -93,7 +107,6 @@ function codeInputBefore(event: any) {
 }
 
 function codeInputAfter(event: any) {
-  console.dir();
   if (event.key.length === 1) {
     (event.target.dataset.pos !== "last"
       ? event.target.nextElementSibling
@@ -113,7 +126,7 @@ function codeInputAfter(event: any) {
       </h1> -->
     </div>
     <form
-      @submit.prevent="joinRoom"
+      @submit.prevent="joinRoom(roomInput, nameInput)"
       class="p-10 flex flex-col justify-around items-center bg-black rounded-lg"
     >
       <div class="flex justify-between items-center gap-3">
