@@ -13,6 +13,7 @@ This is a tool for teachers to manage classrooms and for students to have an int
         /node_modules
         /src
         /views
+        main.js
         package.json
         README.md
         .env
