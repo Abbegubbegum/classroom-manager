@@ -13,7 +13,6 @@ This is a tool for teachers to manage classrooms and for students to have an int
         /node_modules
         /src
         /views
-        main.js
         package.json
         README.md
         .env
@@ -25,12 +24,12 @@ PORT="80";
 JWT_SECRET="your-secret";
 ```
 
-PORT is the port that the server will listen on
+PORT is the port that the server will listen on, if omitted, the server will default to port 8080
 
-JWT_SECRET will be your hidden JWT Secret key which should be a generated random string of characters with about 64 characters of length.
+JWT_SECRET will be your hidden JWT Secret key which should be a generated random string of characters with about 64 characters of length, if omitted, the server will default to an insecure string of characters which should not be used in production but only for development
 
 4.  Start the server
 
         npm run start
 
-You should get a Message showing the url that the server will use.
+You should get a Message showing the port and possible urls that the server will use.
