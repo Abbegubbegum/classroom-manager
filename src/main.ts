@@ -1,6 +1,5 @@
 import express from "express";
 import { resolve } from "path";
-import cors from "cors";
 import jwt from "jsonwebtoken";
 import ms from "ms";
 import dotenv from "dotenv";
@@ -33,7 +32,6 @@ type Member = {
 let rooms: Room[] = [];
 let socketids = new Map<string, string>();
 
-app.use(cors());
 app.use(express.json());
 app.use(express.static(resolve("./views")));
 
