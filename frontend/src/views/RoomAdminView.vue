@@ -12,11 +12,16 @@ import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 import QRCode from "qrcode";
+import TimeDisplay from "@/components/TimeDisplay.vue";
+import QueueList from "@/components/QueueList.vue";
+import SettingsDialog from "@/components/SettingsDialog.vue";
 const route = useRoute();
 const store = useStore();
 
 connectWebSocket();
 getRoomInfo(route.params.roomCode as string);
+
+const showSettings = ref(false);
 
 onMounted(() => {
   createQRCode();
@@ -62,20 +67,45 @@ async function exitRoom() {
     router.push("/");
   }
 }
-
-function getMemberFromStateWithId(memberID: string) {
-  return store.state.room.members.find((member: any) => member.id === memberID);
-}
 </script>
 
 <template>
-  <div class="w-full min-h-full flex flex-col justify-start items-center">
-    <div class="text-center flex flex-col items-center">
-      <h1 class="mt-4 text-5xl font-bold">Room Code:</h1>
-      <h1 class="text-5xl font-bold">{{ $route.params.roomCode }}</h1>
-      <canvas id="canvas" class="aspect-square" width="300"></canvas>
+  <div class="w-full min-h-full grid grid-cols-3 grid-rows-[20vh_1fr]">
+    <button
+      type="button"
+      class="w-fit h-fit bg-transparent border-2 border-black rounded p-3 px-6 m-4 text-lg transition-colors hover:bg-gray-600 hover:text-white hover:border-white"
+      @click="exitRoom"
+    >
+      DELETE ROOM
+    </button>
+
+    <TimeDisplay
+      class="m-3 text-8xl font-semibold col-start-2 flex justify-center"
+    ></TimeDisplay>
+
+    <button
+      class="w-fit h-fit p-4 ml-auto text-5xl transition-transform gearButton z-20"
+      @click="showSettings = !showSettings"
+    >
+      ⚙️
+    </button>
+
+    <div class="row-start-2 p-6 min-h-full">
+      <QueueList></QueueList>
     </div>
-    <div class="p-6 sm:grid sm:grid-cols-2 sm:w-1/2">
+
+    <div class="m-6 text-center flex flex-col items-center row-start-2">
+      <canvas id="canvas" class="aspect-square"></canvas>
+      <h1 class="text-6xl font-semibold">{{ $route.params.roomCode }}</h1>
+    </div>
+  </div>
+  <SettingsDialog
+    :show="showSettings"
+    @close="showSettings = false"
+  ></SettingsDialog>
+</template>
+
+<!-- <div class="p-6 sm:grid sm:grid-cols-2 sm:w-1/2">
       <div class="flex flex-col justify-start items-center">
         <p class="text-3xl font-bold">Members:</p>
         <ul>
@@ -87,28 +117,14 @@ function getMemberFromStateWithId(memberID: string) {
             {{ member.name }}
           </li>
         </ul>
-      </div>
-      <div class="flex flex-col justify-start items-center">
-        <p class="text-3xl font-bold">Queue:</p>
-        <ul>
-          <li
-            v-for="memberID in store.state.room.queue"
-            class="text-3xl hover:text-red-600 hover:line-through cursor-pointer"
-            @click="removeFromQueue($route.params.roomCode as string, memberID)"
-          >
-            {{ getMemberFromStateWithId(memberID).name }}
-          </li>
-        </ul>
-      </div>
-    </div>
-    <button
-      type="button"
-      class="sm:absolute sm:left-0 sm:top-0 bg-transparent border-2 border-black rounded p-3 px-6 m-4 text-lg transition-colors hover:bg-gray-600 hover:text-white hover:border-white"
-      @click="exitRoom"
-    >
-      DELETE ROOM
-    </button>
-  </div>
-</template>
+      </div> --->
 
-<style scoped></style>
+<style scoped>
+.gearButton {
+  transform-origin: top right;
+}
+
+:hover.gearButton {
+  transform: scale(1.5);
+}
+</style>
