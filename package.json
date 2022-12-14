@@ -2,10 +2,10 @@
 	"name": "backend-deploy",
 	"version": "0.1.0",
 	"description": "A website that helps teachers manage their students",
-	"main": "./out/main.js",
+	"main": "main.js",
 	"type": "module",
 	"scripts": {
-		"start": "node ./out/main.js",
+		"start": "node main.js",
 		"dev": "tsc --watch",
 		"serve": "nodemon ./out/main.js"
 	},
