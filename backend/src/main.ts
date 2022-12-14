@@ -17,7 +17,7 @@ const io = new Server(httpServer, {
 	},
 });
 
-const port = process.env.PORT || 8080;
+const port = parseInt(process.env.PORT ?? "8080");
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
 type Room = {
@@ -35,6 +35,10 @@ type Member = {
 
 let rooms: Room[] = [];
 let socketids = new Map<string, string>();
+
+let object = Object.create(null);
+
+object["hello"] = "thing";
 
 app.use(cors());
 app.use(express.json());
