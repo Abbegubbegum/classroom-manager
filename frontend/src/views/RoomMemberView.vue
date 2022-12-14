@@ -75,7 +75,7 @@ async function exitRoom() {
     </button>
     <button
       type="button"
-      class="bg-slate-500 p-4 px-6 m-4 text-xl font-semibold rounded transition-colors hover:bg-slate-200 hover:text-black"
+      class="bg-slate-500 p-4 px-6 m-10 mb-52 sm:mb-10 text-xl font-semibold rounded transition-colors hover:bg-slate-200 hover:text-black"
       @click="exitRoom"
     >
       EXIT ROOM
