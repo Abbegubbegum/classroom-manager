@@ -120,14 +120,9 @@ function codeInputAfter(event: any) {
   <div
     class="bg-slate-900 h-full w-full text-white flex flex-col justify-between place-content-center items-center"
   >
-    <div>
-      <!-- <h1 class="text-5xl font-extrabold text-center my-10">
-        Classroom Manager
-      </h1> -->
-    </div>
     <form
       @submit.prevent="joinRoom(roomInput, nameInput)"
-      class="p-10 flex flex-col justify-around items-center bg-black rounded-lg"
+      class="p-10 m-10 flex flex-col justify-around items-center bg-black rounded-lg"
     >
       <div class="flex justify-between items-center gap-3">
         <input
@@ -191,11 +186,16 @@ function codeInputAfter(event: any) {
     </form>
     <button
       type="button"
-      class="bg-gray-600 mb-40 sm:mb-10 p-4 px-8 text-xl rounded-lg transition-colors hover:bg-slate-200 hover:text-black"
+      class="bg-gray-600 mb-10 p-4 px-8 text-xl rounded-lg transition-colors hover:bg-slate-200 hover:text-black"
       @click="createRoom"
     >
       CREATE ROOM
     </button>
+    <div class="sm:order-first">
+      <!-- <h1 class="text-5xl font-extrabold text-center my-10">
+        Classroom Manager
+      </h1> -->
+    </div>
   </div>
 </template>
 
