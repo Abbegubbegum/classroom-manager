@@ -13,8 +13,9 @@ export type Room = {
 };
 
 type RoomConfig = {
-  queue: boolean;
-  clock: boolean;
+  useQueue: boolean;
+  showClock: boolean;
+  showRemainingTime: boolean;
 };
 
 type Member = {

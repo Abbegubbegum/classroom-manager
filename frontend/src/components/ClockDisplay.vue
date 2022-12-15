@@ -3,9 +3,14 @@ import { ref } from "vue";
 
 const time = ref(new Date());
 
-setInterval(() => {
+const firstDelay = 1000 - time.value.getMilliseconds();
+
+setTimeout(() => {
   time.value = new Date();
-}, 1000);
+  setInterval(() => {
+    time.value = new Date();
+  }, 1000);
+}, firstDelay);
 </script>
 
 <template>

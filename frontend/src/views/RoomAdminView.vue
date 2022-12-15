@@ -1,16 +1,12 @@
 <script setup lang="ts">
-import {
-  connectWebSocket,
-  getRoomInfo,
-  setToken,
-  API_URL,
-} from "@/main";
+import { connectWebSocket, getRoomInfo, setToken, API_URL } from "@/main";
 import router from "@/router";
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 import QRCode from "qrcode";
-import TimeDisplay from "@/components/TimeDisplay.vue";
+import TimeDisplay from "@/components/ClockDisplay.vue";
+import RemainingTimeDisplay from "@/components/RemainingTimeDisplay.vue";
 import QueueList from "@/components/QueueList.vue";
 import SettingsDialog from "@/components/Settings/SettingsDialog.vue";
 const route = useRoute();
@@ -20,6 +16,8 @@ await connectWebSocket();
 await getRoomInfo(route.params.roomCode as string);
 
 const showSettings = ref(false);
+
+console.log(store.state.room.config);
 
 onMounted(() => {
   createQRCode();
@@ -77,10 +75,18 @@ async function exitRoom() {
       DELETE ROOM
     </button>
 
-    <TimeDisplay
-      class="m-3 text-8xl font-semibold col-start-2 flex justify-center"
-      v-if="store.state.room.config.clock"
-    ></TimeDisplay>
+    <div class="col-start-2">
+      <TimeDisplay
+        class="m-3 text-8xl font-semibold flex whitespace-nowrap justify-center"
+        v-if="store.state.room.config.showClock"
+      />
+
+      <RemainingTimeDisplay
+        v-if="store.state.room.config.showRemainingTime"
+        :target="store.state.room.config.endTime ?? NaN"
+        class="mt-6 text-5xl font-semibold flex flex-col items-center whitespace-nowrap"
+      />
+    </div>
 
     <button
       class="w-fit h-fit p-4 ml-auto text-5xl transition-transform gearButton z-20 col-start-3"
@@ -90,18 +96,17 @@ async function exitRoom() {
     </button>
 
     <div class="row-start-2 p-6 min-h-full">
-      <QueueList v-if="store.state.room.config.queue"></QueueList>
+      <QueueList v-if="store.state.room.config.useQueue" />
     </div>
 
-    <div class="m-6 text-center flex flex-col items-center row-start-2">
+    <div
+      class="m-6 mt-[10vh] text-center flex flex-col items-center row-start-2"
+    >
       <canvas id="canvas" class="aspect-square"></canvas>
       <h1 class="text-6xl font-semibold">{{ $route.params.roomCode }}</h1>
     </div>
   </div>
-  <SettingsDialog
-    :show="showSettings"
-    @close="showSettings = false"
-  ></SettingsDialog>
+  <SettingsDialog :show="showSettings" @close="showSettings = false" />
 </template>
 
 <!-- <div class="p-6 sm:grid sm:grid-cols-2 sm:w-1/2">

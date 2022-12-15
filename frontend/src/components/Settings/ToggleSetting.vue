@@ -4,6 +4,7 @@ import { defineProps, defineEmits } from "vue";
 const props = defineProps<{
   label: string;
   value: boolean;
+  disabled: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -20,6 +21,7 @@ function handleInput(e: any) {
       <input
         type="checkbox"
         :checked="props.value"
+        :disabled="props.disabled"
         @input="handleInput"
         name="toggle"
       />

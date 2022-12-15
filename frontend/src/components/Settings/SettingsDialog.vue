@@ -4,6 +4,7 @@ import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import { setRoomConfig } from "@/main";
 import ToggleSetting from "./ToggleSetting.vue";
+import TextSetting from "./TextSetting.vue";
 const store = useStore();
 const route = useRoute();
 const props = defineProps<{ show: boolean }>();
@@ -11,6 +12,21 @@ const props = defineProps<{ show: boolean }>();
 const emit = defineEmits<{
   (e: "close"): void;
 }>();
+
+function handleEndTimeInput(e: Event) {
+  store.state.room.config.endTime = (e.target as any).valueAsNumber;
+  setRoomConfig(route.params.roomCode as string);
+}
+
+function formatTime(ms: number, def_val?: string) {
+  if (Number.isNaN(ms)) {
+    return def_val ? def_val : null;
+  } else {
+    return [Math.floor(ms / 60 / 60 / 1000), Math.floor(ms / 60 / 1000) % 60]
+      .join(":")
+      .replace(/\b(\d)\b/g, "0$1");
+  }
+}
 </script>
 
 <template>
@@ -20,24 +36,47 @@ const emit = defineEmits<{
         <div class="modal-container">
           <ToggleSetting
             label="Queue"
-            :value="store.state.room.config.queue"
+            :value="store.state.room.config.useQueue"
+            :disabled="false"
             @change="
               (val) => {
-                store.state.room.config.queue = val;
+                store.state.room.config.useQueue = val;
                 setRoomConfig(route.params.roomCode as string);
               }
             "
-          ></ToggleSetting>
+          />
           <ToggleSetting
             label="Clock"
-            :value="store.state.room.config.clock"
+            :disabled="false"
+            :value="store.state.room.config.showClock"
             @change="
               (val) => {
-                store.state.room.config.clock = val;
+                store.state.room.config.showClock = val;
                 setRoomConfig(route.params.roomCode as string);
               }
             "
-          ></ToggleSetting>
+          />
+
+          <ToggleSetting
+            label="Show Remaining Time"
+            :disabled="false"
+            :value="store.state.room.config.showRemainingTime"
+            @change="(val) => {
+            store.state.room.config.showRemainingTime = val;
+            setRoomConfig(route.params.roomCode as string);
+          }"
+          />
+
+          <div class="flex items-center mb-4">
+            <label class="text-2xl ml-2">
+              <input
+                type="time"
+                @input="handleEndTimeInput"
+                :value="formatTime(store.state.room.config.endTime)"
+              />
+              End Time
+            </label>
+          </div>
         </div>
       </div>
     </div>

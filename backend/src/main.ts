@@ -31,8 +31,10 @@ type Room = {
 };
 
 type RoomConfig = {
-	queue: boolean;
-	clock: boolean;
+	useQueue: boolean;
+	showClock: boolean;
+	showRemainingTime: boolean;
+	endTime?: number;
 };
 
 type Member = {
@@ -564,8 +566,9 @@ function createRoom(ownerID: string, expiresIn: string) {
 		queue: [],
 		expiresAt: Date.now() + ms(expiresIn),
 		config: {
-			queue: true,
-			clock: true,
+			useQueue: true,
+			showClock: true,
+			showRemainingTime: true,
 		} as RoomConfig,
 	};
 	rooms.push(room);

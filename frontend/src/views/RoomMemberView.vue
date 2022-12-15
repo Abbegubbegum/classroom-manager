@@ -58,7 +58,8 @@ async function exitRoom() {
         class="text-4xl font-semibold m-1 transition-opacity"
         :class="{
           disabled:
-            store.state.queuePosition === -1 || !store.state.room.config.queue,
+            store.state.queuePosition === -1 ||
+            !store.state.room.config.useQueue,
         }"
       >
         In Queue!
@@ -67,7 +68,8 @@ async function exitRoom() {
         class="text-3xl transition-opacity"
         :class="{
           disabled:
-            store.state.queuePosition === -1 || !store.state.room.config.queue,
+            store.state.queuePosition === -1 ||
+            !store.state.room.config.useQueue,
         }"
       >
         Queue Position: {{ store.state.queuePosition }}
@@ -75,7 +77,7 @@ async function exitRoom() {
     </div>
     <button
       type="button"
-      v-if="store.state.room.config.queue"
+      v-if="store.state.room.config.useQueue"
       class="bg-green-500 p-6 w-52 m-4 text-xl font-semibold rounded text-black transition-colors hover:text-white"
       :class="{ exitColor: store.state.queuePosition !== -1 }"
       @click="toggleQueue($route.params.roomCode as string)"
