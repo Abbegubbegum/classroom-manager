@@ -17,7 +17,7 @@ await getRoomInfo(route.params.roomCode as string);
 
 const showSettings = ref(false);
 
-console.log(store.state.room.config);
+// console.log(store.state.room.config);
 
 onMounted(() => {
   createQRCode();

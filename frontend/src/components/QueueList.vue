@@ -4,15 +4,15 @@ import { ref } from "vue";
 import { useStore } from "vuex";
 const store = useStore();
 
-const names = ref([
-  "Albin",
-  "Samuel Broman",
-  "Alexander",
-  "Markus",
-  "Mathias Pusher",
-  "Leo",
-  "Martin Segelius",
-]);
+// const names = ref([
+//   "Albin",
+//   "Samuel Broman",
+//   "Alexander",
+//   "Markus",
+//   "Mathias Pusher",
+//   "Leo",
+//   "Martin Segelius",
+// ]);
 
 function getMemberFromStateWithId(memberID: string) {
   return store.state.room.members.find((member: any) => member.id === memberID);
@@ -29,12 +29,12 @@ function getMemberFromStateWithId(memberID: string) {
       <img src="@/assets/question.svg" width="80" alt="" />
     </div>
     <ul class="h-full w-full text-center bg-gray-50 rounded-b-lg">
-      <li
+      <!-- <li
         v-for="name in names"
         class="p-2 bg-white w-full border-b text-3xl hover:text-red-600 hover:line-through cursor-pointer"
       >
         {{ name }}
-      </li>
+      </li> -->
       <li
         v-for="memberID in store.state.room.queue"
         class="p-2 bg-white w-full border text-3xl hover:text-red-600 hover:line-through cursor-pointer"
