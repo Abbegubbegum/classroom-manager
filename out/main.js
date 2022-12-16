@@ -36,21 +36,43 @@ io.on("connection", (socket) => {
         const token = socket.handshake.auth.token;
         const room = rooms.find((room) => room.code === code);
         const decodedToken = decodeToken(token);
-        // console.log(token);
-        // console.log(room);
-        if ((room === null || room === void 0 ? void 0 : room.ownerID) == ((_a = decodedToken === null || decodedToken === void 0 ? void 0 : decodedToken.id) !== null && _a !== void 0 ? _a : "")) {
+        if ((room === null || room === void 0 ? void 0 : room.ownerID) === ((_a = decodedToken === null || decodedToken === void 0 ? void 0 : decodedToken.id) !== null && _a !== void 0 ? _a : "")) {
             cb(room);
         }
         else {
             cb(undefined);
         }
     });
+    socket.on("GET_ROOM_CONFIG", (code, cb) => {
+        const token = socket.handshake.auth.token;
+        const room = rooms.find((room) => room.code === code);
+        const decodedToken = decodeToken(token);
+        if (!room || !decodedToken) {
+            cb(undefined);
+            return;
+        }
+        const member = getMemberFromId(decodedToken.id, room);
+        if (!member) {
+            cb(undefined);
+            return;
+        }
+        cb(room.config);
+    });
+    socket.on("SET_ROOM_CONFIG", (code, config) => {
+        var _a;
+        const token = socket.handshake.auth.token;
+        const room = rooms.find((room) => room.code === code);
+        const decodedToken = decodeToken(token);
+        if ((room === null || room === void 0 ? void 0 : room.ownerID) !== ((_a = decodedToken === null || decodedToken === void 0 ? void 0 : decodedToken.id) !== null && _a !== void 0 ? _a : "")) {
+            return;
+        }
+        room.config = config;
+        emitRoomConfigToMembers(room);
+    });
     socket.on("OWNER_REMOVE_MEMBER", (code, memberID) => {
         const token = socket.handshake.auth.token;
         const room = rooms.find((room) => room.code === code);
         const decodedToken = decodeToken(token);
-        // console.log(decodedToken);
-        // console.log(room?.ownerID);
         if (!room ||
             !decodedToken ||
             room.ownerID !== decodedToken.id) {
@@ -366,6 +388,11 @@ function createRoom(ownerID, expiresIn) {
         members: [],
         queue: [],
         expiresAt: Date.now() + ms(expiresIn),
+        config: {
+            useQueue: true,
+            showClock: true,
+            showRemainingTime: true,
+        },
     };
     rooms.push(room);
     return room;
@@ -452,4 +479,12 @@ function emitRoomInfoToRoomOwner(room) {
     if (socketId) {
         io.to(socketId).emit("ROOM_INFO", room);
     }
+}
+function emitRoomConfigToMembers(room) {
+    room.members.forEach((member) => {
+        const socketId = getSocketIdFromId(member.id);
+        if (socketId) {
+            io.to(socketId).emit("ROOM_CONFIG", room.config);
+        }
+    });
 }
