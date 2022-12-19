@@ -195,7 +195,7 @@ export async function getRoomConfig(roomCode: string) {
           return;
         }
 
-        console.log(config);
+        // console.log(config);
 
         store.state.room.config = config;
         resolve();
