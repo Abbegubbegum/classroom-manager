@@ -483,7 +483,20 @@ httpServer.listen(port, () => {
 			console.log(`http://${address}:${port}`);
 		});
 	});
+
+	setInterval(checkRoomsExpireTime, 60000);
 });
+
+function checkRoomsExpireTime() {
+	const time = Date.now();
+
+	for (let i = 0; i < rooms.length; i++) {
+		if (rooms[i].expiresAt < time) {
+			rooms.splice(i, 1);
+			i--;
+		}
+	}
+}
 
 function generateUID() {
 	return Math.random().toString().replace(".", "").substring(0, 8);
