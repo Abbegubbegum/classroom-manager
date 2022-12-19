@@ -17,8 +17,6 @@ await getRoomInfo(route.params.roomCode as string);
 
 const showSettings = ref(false);
 
-// console.log(store.state.room.config);
-
 onMounted(() => {
   createQRCode();
 });
@@ -33,12 +31,6 @@ function createQRCode() {
     },
     (err) => {
       if (err) console.error(err);
-
-      // canvas.width = canvas.width * 2;
-      // const ctx = canvas.getContext("2d");
-      // console.log(ctx);
-
-      // ctx?.scale(2, 2);
     }
   );
 }
