@@ -100,7 +100,7 @@ async function exitRoom() {
     </div>
 
     <div
-      class="m-6 mt-[10vh] text-center flex flex-col items-center row-start-2"
+      class="m-6 mb-[10vh] text-center flex flex-col items-center justify-end row-start-2"
     >
       <canvas id="canvas" class="aspect-square"></canvas>
       <h1 class="text-6xl font-semibold">{{ $route.params.roomCode }}</h1>
